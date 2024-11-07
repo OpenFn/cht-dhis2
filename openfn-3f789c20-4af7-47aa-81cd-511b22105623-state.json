@@ -1,0 +1,75 @@
+{
+  "id": "3f789c20-4af7-47aa-81cd-511b22105623",
+  "name": "cht-sandbox",
+  "description": null,
+  "inserted_at": "2024-11-07T11:32:07Z",
+  "updated_at": "2024-11-07T11:32:07Z",
+  "project_credentials": {},
+  "scheduled_deletion": null,
+  "history_retention_period": null,
+  "dataclip_retention_period": null,
+  "retention_policy": "retain_all",
+  "requires_mfa": false,
+  "workflows": {
+    "Sample-Workflow": {
+      "id": "c80ea84e-4a5b-44db-b863-9305d5e225e2",
+      "name": "Sample Workflow",
+      "inserted_at": "2024-11-07T12:49:44.252128Z",
+      "lock_version": 2,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
+          "type": "cron",
+          "cron_expression": "0 0 * * *"
+        }
+      },
+      "jobs": {
+        "Get-Patients": {
+          "id": "6c132952-404d-434b-8ee5-c161704c9f86",
+          "name": "Get Patients",
+          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
+          "adaptor": "@openfn/language-cht@latest",
+          "project_credential_id": null
+        },
+        "Transform-and-map-patients": {
+          "id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
+          "name": "Transform and map patients",
+          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
+          "adaptor": "@openfn/language-common@latest",
+          "project_credential_id": null
+        },
+        "Load-to-DHIS2": {
+          "id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7",
+          "name": "Load to DHIS2",
+          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
+          "adaptor": "@openfn/language-dhis2@latest",
+          "project_credential_id": null
+        }
+      },
+      "edges": {
+        "cron->Get-Patients": {
+          "enabled": true,
+          "id": "3c0a1c52-1f6b-4210-8ead-7d50cea97428",
+          "source_trigger_id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
+          "condition_type": "always",
+          "target_job_id": "6c132952-404d-434b-8ee5-c161704c9f86"
+        },
+        "Get-Patients->Transform-and-map-patients": {
+          "enabled": true,
+          "id": "038b5924-a4b4-4434-8f85-d4101aa3da61",
+          "source_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
+          "condition_type": "on_job_success",
+          "target_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0"
+        },
+        "Transform-and-map-patients->Load-to-DHIS2": {
+          "enabled": true,
+          "id": "818f484f-b685-4352-8553-93514b4df739",
+          "source_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
+          "condition_type": "on_job_success",
+          "target_job_id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7"
+        }
+      }
+    }
+  }
+}

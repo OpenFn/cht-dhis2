@@ -1,0 +1,55 @@
+name: cht-sandbox
+description: null
+credentials: null
+workflows:
+  Sample-Workflow:
+    name: Sample Workflow
+    jobs:
+      Get-Patients:
+        name: Get Patients
+        adaptor: '@openfn/language-cht@latest'
+        credential: null
+        body: |
+          
+          // Check out the Job Writing Guide for help getting started:
+          // https://docs.openfn.org/documentation/jobs/job-writing-guide
+
+      Transform-and-map-patients:
+        name: Transform and map patients
+        adaptor: '@openfn/language-common@latest'
+        credential: null
+        body: |
+          
+          // Check out the Job Writing Guide for help getting started:
+          // https://docs.openfn.org/documentation/jobs/job-writing-guide
+
+      Load-to-DHIS2:
+        name: Load to DHIS2
+        adaptor: '@openfn/language-dhis2@latest'
+        credential: null
+        body: |
+          
+          // Check out the Job Writing Guide for help getting started:
+          // https://docs.openfn.org/documentation/jobs/job-writing-guide
+
+    triggers:
+      cron:
+        type: cron
+        cron_expression: '0 0 * * *'
+        enabled: true
+    edges:
+      cron->Get-Patients:
+        source_trigger: cron
+        target_job: Get-Patients
+        condition_type: always
+        enabled: true
+      Get-Patients->Transform-and-map-patients:
+        source_job: Get-Patients
+        target_job: Transform-and-map-patients
+        condition_type: on_job_success
+        enabled: true
+      Transform-and-map-patients->Load-to-DHIS2:
+        source_job: Transform-and-map-patients
+        target_job: Load-to-DHIS2
+        condition_type: on_job_success
+        enabled: true
