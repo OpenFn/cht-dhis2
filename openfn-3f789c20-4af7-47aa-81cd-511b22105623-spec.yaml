@@ -1,7 +1,121 @@
 name: cht-sandbox
 description: null
-credentials: null
+credentials:
+  mtuchi@openfn.org-DHIS2-2-40-6:
+    name: DHIS2 2-40-6
+    owner: mtuchi@openfn.org
+  mtuchi@openfn.org-DHIS2-Dev:
+    name: DHIS2 Dev
+    owner: mtuchi@openfn.org
 workflows:
+  CHT-webhook:
+    name: CHT webhook
+    jobs:
+      DHIS2-mapping:
+        name: DHIS2 mapping
+        adaptor: '@openfn/language-common@latest'
+        credential: null
+        body: |
+          const facilities = {
+            "712526f6-f826-45a7-a80b-6546ad9fde9d": "DiszpKrYNg8", //corresponding_on_DHIS2,
+          };
+
+          const convertToBool = (val) => {
+            if (typeof val === 'boolean') return val;
+            if (typeof val === 'string') {
+              val = val.toLowerCase().trim();
+              return val === '1' || val === 'true' || val === 'yes';
+            }
+            return !!val;
+          };
+
+          const safeGet = (obj, path, defaultValue = undefined) => {
+            return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;
+          };
+
+          const genderMap = (value) => {
+            if (!value) return undefined;
+            return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';
+          };
+
+          const convertToNumeric = (value) => {
+            return value
+          }
+
+          const mapReport = (report) => {
+            const dataElements = [
+              // { dataElement: "EuiLnVQP7fz", path: 'fever_detected' },
+              // { dataElement: "c7DB86yPCPw", path: 'danger_signs' },
+              // { dataElement: "pUQ3PxCLBGW", path: 'symptoms_severity_level' },
+              // { dataElement: "UkSorKPBQKp", path: 'd_diarrhoea' },
+              { dataElement: "mQfnNz6HAxg", path: "properties.d_disease_severe_malaria_possible" },
+              { dataElement: "rUiCXLuXe0D", path: "data.closed.doc.fields.g_registration.p_id" },
+              { dataElement: "L9FyeXeKysL", path: "properties.p_gender", transform: genderMap },
+              { dataElement: "sRViHZrNOOi", path: "properties.p_age" },
+              { dataElement: "zWAPsDC96SK", path: "properties.p_weight" },
+              { dataElement: "nrsvTZKdAxD", path: "properties.p_temp" },
+              { dataElement: "f8AiyAoBmQZ", path: "properties.d_pneumonia", transform: convertToBool },
+              { dataElement: "nOqH46e5VmP", path: "data.closed.doc.d_malaria" },
+              { dataElement: "S6XCvAD6uv6", path: "properties.d_scabies_infected", transform: convertToBool },
+              { dataElement: "Vg8aEzNouYb", path: "properties.d_measles", transform: convertToBool },
+              { dataElement: "Ofyvm4Ynqh7", path: "data.closed.doc.fields.ds_amoxicillin" },
+              { dataElement: "EijcDbR4oWL", path: "data.closed.doc.fields.ds_paracetamol", transform: convertToNumeric },
+              { dataElement: "DsiPa2sGoEe", path: "data.closed.doc.fields.ds_erythromycin" },
+              { dataElement: "xpWPRlZlN7b", path: "data.closed.doc.fields.d_deworming_needed", transform: convertToBool },
+              { dataElement: "tgUaWBaAIag", path: "data.closed.doc.fields.dur_amoxicillin" },
+            ];
+
+            return {
+              dataValues: dataElements.map(({ dataElement, path, transform }) => ({
+                dataElement,
+                value: transform ? transform(safeGet(report, path)) : safeGet(report, path),
+              })),
+              notes: [{
+                value: safeGet(report, 'data.closed.doc.contact.notes'),
+                storedBy: safeGet(report, 'data.closed.doc.contact.name'),
+                storedDate: report.reported_date,
+              }],
+            };
+          };
+
+          fn((state) => {
+            const { report } = state.data;
+
+            state.dhis2Mapping = {
+              orgUnit: "DiszpKrYNg8",
+              occurredAt: report.reported_date,
+              programStage: "",
+              program: "wNRmGnc1t11",
+              status: "COMPLETED",
+              ...mapReport(report)
+            };
+
+            console.log(state.dhis2Mapping);
+            return state;
+          });
+
+      Create-Event-Program:
+        name: Create Event Program
+        adaptor: '@openfn/language-dhis2@latest'
+        credential: mtuchi@openfn.org-DHIS2-2-40-6
+        body: |
+          // Create events
+          create("events", $.dhis2Mapping);
+    triggers:
+      webhook:
+        type: webhook
+        enabled: true
+    edges:
+      webhook->DHIS2-mapping:
+        source_trigger: webhook
+        target_job: DHIS2-mapping
+        condition_type: always
+        enabled: true
+      DHIS2-mapping->Create-Event-Program:
+        source_job: DHIS2-mapping
+        target_job: Create-Event-Program
+        condition_type: on_job_success
+        enabled: true
   Sample-Workflow:
     name: Sample Workflow
     jobs:
@@ -26,7 +140,7 @@ workflows:
       Load-to-DHIS2:
         name: Load to DHIS2
         adaptor: '@openfn/language-dhis2@latest'
-        credential: null
+        credential: mtuchi@openfn.org-DHIS2-Dev
         body: |
           
           // Check out the Job Writing Guide for help getting started:
