@@ -13,12 +13,13 @@ workflows:
     jobs:
       DHIS2-mapping:
         name: DHIS2 mapping
-        adaptor: '@openfn/language-common@latest'
+        adaptor: '@openfn/language-common@2.3.0'
         credential: null
         body: |
-          const facilities = {
-            "712526f6-f826-45a7-a80b-6546ad9fde9d": "DiszpKrYNg8", //corresponding_on_DHIS2,
-          };
+          //TODO: Remove this once we have orgUnit from report
+          // const facilities = {
+          //   "712526f6-f826-45a7-a80b-6546ad9fde9d": "DiszpKrYNg8", //corresponding_on_DHIS2,
+          // };
 
           const convertToBool = (val) => {
             if (typeof val === 'boolean') return val;
@@ -39,8 +40,13 @@ workflows:
           };
 
           const convertToNumeric = (value) => {
-            return value
-          }
+            if (typeof value === 'number') return value;
+            if (typeof value === 'string') {
+              const parsed = parseFloat(value);
+              return isNaN(parsed) ? undefined : parsed;
+            }
+            return undefined;
+          };
 
           const mapReport = (report) => {
             const dataElements = [
@@ -48,21 +54,21 @@ workflows:
               // { dataElement: "c7DB86yPCPw", path: 'danger_signs' },
               // { dataElement: "pUQ3PxCLBGW", path: 'symptoms_severity_level' },
               // { dataElement: "UkSorKPBQKp", path: 'd_diarrhoea' },
-              { dataElement: "mQfnNz6HAxg", path: "properties.d_disease_severe_malaria_possible" },
-              { dataElement: "rUiCXLuXe0D", path: "data.closed.doc.fields.g_registration.p_id" },
+              { dataElement: "mQfnNz6HAxg", path: "properties.d_disease_severe_malaria_possible", transform: convertToBool },
+              { dataElement: "rUiCXLuXe0D", path: "properties.p_id" },
               { dataElement: "L9FyeXeKysL", path: "properties.p_gender", transform: genderMap },
               { dataElement: "sRViHZrNOOi", path: "properties.p_age" },
               { dataElement: "zWAPsDC96SK", path: "properties.p_weight" },
               { dataElement: "nrsvTZKdAxD", path: "properties.p_temp" },
               { dataElement: "f8AiyAoBmQZ", path: "properties.d_pneumonia", transform: convertToBool },
-              { dataElement: "nOqH46e5VmP", path: "data.closed.doc.d_malaria" },
+              { dataElement: "nOqH46e5VmP", path: "properties.d_malaria", transform: convertToBool },
               { dataElement: "S6XCvAD6uv6", path: "properties.d_scabies_infected", transform: convertToBool },
               { dataElement: "Vg8aEzNouYb", path: "properties.d_measles", transform: convertToBool },
-              { dataElement: "Ofyvm4Ynqh7", path: "data.closed.doc.fields.ds_amoxicillin" },
-              { dataElement: "EijcDbR4oWL", path: "data.closed.doc.fields.ds_paracetamol", transform: convertToNumeric },
-              { dataElement: "DsiPa2sGoEe", path: "data.closed.doc.fields.ds_erythromycin" },
-              { dataElement: "xpWPRlZlN7b", path: "data.closed.doc.fields.d_deworming_needed", transform: convertToBool },
-              { dataElement: "tgUaWBaAIag", path: "data.closed.doc.fields.dur_amoxicillin" },
+              { dataElement: "Ofyvm4Ynqh7", path: "properties.ds_amoxicillin", transform: convertToBool },
+              { dataElement: "EijcDbR4oWL", path: "properties.ds_paracetamol", transform: convertToNumeric },
+              { dataElement: "DsiPa2sGoEe", path: "properties.ds_erythromycin", transform: convertToNumeric },
+              { dataElement: "xpWPRlZlN7b", path: "properties.d_deworming_needed", transform: convertToBool },
+              { dataElement: "tgUaWBaAIag", path: "properties.dur_amoxicillin" },
             ];
 
             return {
@@ -84,7 +90,6 @@ workflows:
             state.dhis2Mapping = {
               orgUnit: "DiszpKrYNg8",
               occurredAt: report.reported_date,
-              programStage: "",
               program: "wNRmGnc1t11",
               status: "COMPLETED",
               ...mapReport(report)
@@ -96,7 +101,7 @@ workflows:
 
       Create-Event-Program:
         name: Create Event Program
-        adaptor: '@openfn/language-dhis2@latest'
+        adaptor: '@openfn/language-dhis2@6.1.0'
         credential: mtuchi@openfn.org-DHIS2-2-40-6
         body: |
           // Create events

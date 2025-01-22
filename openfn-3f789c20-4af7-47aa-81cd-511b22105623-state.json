@@ -3,7 +3,7 @@
   "name": "cht-sandbox",
   "description": null,
   "inserted_at": "2024-11-07T11:32:07Z",
-  "updated_at": "2024-11-28T12:41:57Z",
+  "updated_at": "2025-01-14T14:08:42Z",
   "scheduled_deletion": null,
   "project_credentials": {
     "mtuchi@openfn.org-DHIS2-Dev": {
@@ -61,31 +61,31 @@
         "cron->Get-Patients": {
           "enabled": true,
           "id": "3c0a1c52-1f6b-4210-8ead-7d50cea97428",
+          "target_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
           "source_trigger_id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
-          "condition_type": "always",
-          "target_job_id": "6c132952-404d-434b-8ee5-c161704c9f86"
+          "condition_type": "always"
         },
         "Get-Patients->Transform-and-map-patients": {
           "enabled": true,
           "id": "038b5924-a4b4-4434-8f85-d4101aa3da61",
+          "target_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
           "source_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
-          "condition_type": "on_job_success",
-          "target_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0"
+          "condition_type": "on_job_success"
         },
         "Transform-and-map-patients->Load-to-DHIS2": {
           "enabled": true,
           "id": "818f484f-b685-4352-8553-93514b4df739",
+          "target_job_id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7",
           "source_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
-          "condition_type": "on_job_success",
-          "target_job_id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7"
+          "condition_type": "on_job_success"
         }
       }
     },
     "CHT-webhook": {
       "id": "6cdd641d-6087-414b-8193-d01d71d3240e",
       "name": "CHT webhook",
-      "inserted_at": "2024-12-18T18:19:49.271343Z",
-      "lock_version": 46,
+      "inserted_at": "2025-01-22T13:25:28.105788Z",
+      "lock_version": 52,
       "triggers": {
         "webhook": {
           "enabled": true,
@@ -97,15 +97,15 @@
         "DHIS2-mapping": {
           "id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
           "name": "DHIS2 mapping",
-          "body": "const facilities = {\n  \"712526f6-f826-45a7-a80b-6546ad9fde9d\": \"DiszpKrYNg8\", //corresponding_on_DHIS2,\n};\n\nconst convertToBool = (val) => {\n  if (typeof val === 'boolean') return val;\n  if (typeof val === 'string') {\n    val = val.toLowerCase().trim();\n    return val === '1' || val === 'true' || val === 'yes';\n  }\n  return !!val;\n};\n\nconst safeGet = (obj, path, defaultValue = undefined) => {\n  return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;\n};\n\nconst genderMap = (value) => {\n  if (!value) return undefined;\n  return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';\n};\n\nconst convertToNumeric = (value) => {\n  return value\n}\n\nconst mapReport = (report) => {\n  const dataElements = [\n    // { dataElement: \"EuiLnVQP7fz\", path: 'fever_detected' },\n    // { dataElement: \"c7DB86yPCPw\", path: 'danger_signs' },\n    // { dataElement: \"pUQ3PxCLBGW\", path: 'symptoms_severity_level' },\n    // { dataElement: \"UkSorKPBQKp\", path: 'd_diarrhoea' },\n    { dataElement: \"mQfnNz6HAxg\", path: \"properties.d_disease_severe_malaria_possible\" },\n    { dataElement: \"rUiCXLuXe0D\", path: \"data.closed.doc.fields.g_registration.p_id\" },\n    { dataElement: \"L9FyeXeKysL\", path: \"properties.p_gender\", transform: genderMap },\n    { dataElement: \"sRViHZrNOOi\", path: \"properties.p_age\" },\n    { dataElement: \"zWAPsDC96SK\", path: \"properties.p_weight\" },\n    { dataElement: \"nrsvTZKdAxD\", path: \"properties.p_temp\" },\n    { dataElement: \"f8AiyAoBmQZ\", path: \"properties.d_pneumonia\", transform: convertToBool },\n    { dataElement: \"nOqH46e5VmP\", path: \"data.closed.doc.d_malaria\" },\n    { dataElement: \"S6XCvAD6uv6\", path: \"properties.d_scabies_infected\", transform: convertToBool },\n    { dataElement: \"Vg8aEzNouYb\", path: \"properties.d_measles\", transform: convertToBool },\n    { dataElement: \"Ofyvm4Ynqh7\", path: \"data.closed.doc.fields.ds_amoxicillin\" },\n    { dataElement: \"EijcDbR4oWL\", path: \"data.closed.doc.fields.ds_paracetamol\", transform: convertToNumeric },\n    { dataElement: \"DsiPa2sGoEe\", path: \"data.closed.doc.fields.ds_erythromycin\" },\n    { dataElement: \"xpWPRlZlN7b\", path: \"data.closed.doc.fields.d_deworming_needed\", transform: convertToBool },\n    { dataElement: \"tgUaWBaAIag\", path: \"data.closed.doc.fields.dur_amoxicillin\" },\n  ];\n\n  return {\n    dataValues: dataElements.map(({ dataElement, path, transform }) => ({\n      dataElement,\n      value: transform ? transform(safeGet(report, path)) : safeGet(report, path),\n    })),\n    notes: [{\n      value: safeGet(report, 'data.closed.doc.contact.notes'),\n      storedBy: safeGet(report, 'data.closed.doc.contact.name'),\n      storedDate: report.reported_date,\n    }],\n  };\n};\n\nfn((state) => {\n  const { report } = state.data;\n\n  state.dhis2Mapping = {\n    orgUnit: \"DiszpKrYNg8\",\n    occurredAt: report.reported_date,\n    programStage: \"\",\n    program: \"wNRmGnc1t11\",\n    status: \"COMPLETED\",\n    ...mapReport(report)\n  };\n\n  console.log(state.dhis2Mapping);\n  return state;\n});\n",
-          "adaptor": "@openfn/language-common@latest",
+          "body": "//TODO: Remove this once we have orgUnit from report\n// const facilities = {\n//   \"712526f6-f826-45a7-a80b-6546ad9fde9d\": \"DiszpKrYNg8\", //corresponding_on_DHIS2,\n// };\n\nconst convertToBool = (val) => {\n  if (typeof val === 'boolean') return val;\n  if (typeof val === 'string') {\n    val = val.toLowerCase().trim();\n    return val === '1' || val === 'true' || val === 'yes';\n  }\n  return !!val;\n};\n\nconst safeGet = (obj, path, defaultValue = undefined) => {\n  return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;\n};\n\nconst genderMap = (value) => {\n  if (!value) return undefined;\n  return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';\n};\n\nconst convertToNumeric = (value) => {\n  if (typeof value === 'number') return value;\n  if (typeof value === 'string') {\n    const parsed = parseFloat(value);\n    return isNaN(parsed) ? undefined : parsed;\n  }\n  return undefined;\n};\n\nconst mapReport = (report) => {\n  const dataElements = [\n    // { dataElement: \"EuiLnVQP7fz\", path: 'fever_detected' },\n    // { dataElement: \"c7DB86yPCPw\", path: 'danger_signs' },\n    // { dataElement: \"pUQ3PxCLBGW\", path: 'symptoms_severity_level' },\n    // { dataElement: \"UkSorKPBQKp\", path: 'd_diarrhoea' },\n    { dataElement: \"mQfnNz6HAxg\", path: \"properties.d_disease_severe_malaria_possible\", transform: convertToBool },\n    { dataElement: \"rUiCXLuXe0D\", path: \"properties.p_id\" },\n    { dataElement: \"L9FyeXeKysL\", path: \"properties.p_gender\", transform: genderMap },\n    { dataElement: \"sRViHZrNOOi\", path: \"properties.p_age\" },\n    { dataElement: \"zWAPsDC96SK\", path: \"properties.p_weight\" },\n    { dataElement: \"nrsvTZKdAxD\", path: \"properties.p_temp\" },\n    { dataElement: \"f8AiyAoBmQZ\", path: \"properties.d_pneumonia\", transform: convertToBool },\n    { dataElement: \"nOqH46e5VmP\", path: \"properties.d_malaria\", transform: convertToBool },\n    { dataElement: \"S6XCvAD6uv6\", path: \"properties.d_scabies_infected\", transform: convertToBool },\n    { dataElement: \"Vg8aEzNouYb\", path: \"properties.d_measles\", transform: convertToBool },\n    { dataElement: \"Ofyvm4Ynqh7\", path: \"properties.ds_amoxicillin\", transform: convertToBool },\n    { dataElement: \"EijcDbR4oWL\", path: \"properties.ds_paracetamol\", transform: convertToNumeric },\n    { dataElement: \"DsiPa2sGoEe\", path: \"properties.ds_erythromycin\", transform: convertToNumeric },\n    { dataElement: \"xpWPRlZlN7b\", path: \"properties.d_deworming_needed\", transform: convertToBool },\n    { dataElement: \"tgUaWBaAIag\", path: \"properties.dur_amoxicillin\" },\n  ];\n\n  return {\n    dataValues: dataElements.map(({ dataElement, path, transform }) => ({\n      dataElement,\n      value: transform ? transform(safeGet(report, path)) : safeGet(report, path),\n    })),\n    notes: [{\n      value: safeGet(report, 'data.closed.doc.contact.notes'),\n      storedBy: safeGet(report, 'data.closed.doc.contact.name'),\n      storedDate: report.reported_date,\n    }],\n  };\n};\n\nfn((state) => {\n  const { report } = state.data;\n\n  state.dhis2Mapping = {\n    orgUnit: \"DiszpKrYNg8\",\n    occurredAt: report.reported_date,\n    program: \"wNRmGnc1t11\",\n    status: \"COMPLETED\",\n    ...mapReport(report)\n  };\n\n  console.log(state.dhis2Mapping);\n  return state;\n});\n",
+          "adaptor": "@openfn/language-common@2.3.0",
           "project_credential_id": null
         },
         "Create-Event-Program": {
           "id": "5c26c910-7f0d-4cd7-8a71-22eba3d5db3c",
           "name": "Create Event Program",
           "body": "// Create events\ncreate(\"events\", $.dhis2Mapping);",
-          "adaptor": "@openfn/language-dhis2@latest",
+          "adaptor": "@openfn/language-dhis2@6.1.0",
           "project_credential_id": "752324bf-1765-4b45-8bdc-478317f8b362"
         }
       },
@@ -113,16 +113,16 @@
         "webhook->DHIS2-mapping": {
           "enabled": true,
           "id": "a80a7125-32af-4159-8684-d014c07e6cfd",
+          "target_job_id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
           "source_trigger_id": "7bf6c1bc-f16f-40c0-89a5-184ae6ae742f",
-          "condition_type": "always",
-          "target_job_id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04"
+          "condition_type": "always"
         },
         "DHIS2-mapping->Create-Event-Program": {
           "enabled": true,
           "id": "bc96b14e-af1e-48d8-884a-51d2fc018684",
+          "target_job_id": "5c26c910-7f0d-4cd7-8a71-22eba3d5db3c",
           "source_job_id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
-          "condition_type": "on_job_success",
-          "target_job_id": "5c26c910-7f0d-4cd7-8a71-22eba3d5db3c"
+          "condition_type": "on_job_success"
         }
       }
     }
