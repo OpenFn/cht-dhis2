@@ -1,13 +1,427 @@
 name: cht-sandbox
 description: null
+collections:
+  run-logs:
+    name: run-logs
 credentials:
-  mtuchi@openfn.org-DHIS2-2-40-6:
-    name: DHIS2 2-40-6
+  mtuchi@openfn.org-DHIS2-2-40-7:
+    name: DHIS2 2-40-7
     owner: mtuchi@openfn.org
   mtuchi@openfn.org-DHIS2-Dev:
     name: DHIS2 Dev
     owner: mtuchi@openfn.org
+  rkenyuri@icrc.org-DHIS2-PLAY-dev-2-40:
+    name: DHIS2 PLAY dev 2-40
+    owner: rkenyuri@icrc.org
 workflows:
+  CHT-DHIS2:
+    name: CHT-DHIS2
+    jobs:
+      OpenFn:
+        name: OpenFn
+        adaptor: '@openfn/language-common@latest'
+        credential: null
+        body: |
+          collections.set('run-logs', i => `${i.case_id}-cht-submission`, $.data)
+
+          fn(state => {
+            console.log("CHT to DHIS2 preparation");
+
+            // Destructure the needed values from state.data
+            const { case_id, orgUnit, properties, reported_date } = state.data;
+
+            // Helper functions
+            function indexOf(collection, target) {
+              for (let i = 0; i < collection.length; i++) {
+                if (collection[i] === target) {
+                  return i;
+                }
+              }
+              return -1;
+            }
+
+            function checkAnswers(chosenAnswers, target, delimiter = " ") {
+              if (chosenAnswers === undefined) { return undefined; }
+              let chosenAnswersList = chosenAnswers.split(delimiter);
+              return indexOf(chosenAnswersList, target) !== -1;
+            }
+
+            function dataElement(dataElement, value, comment) {
+              return { dataElement, value, comment };
+            }
+
+            // Converter function: converts 1/"1" to true, 0/"0" to false
+            const converter = function (x) {
+              if (x === 1 || x === "1") {
+                return true;
+              } else if (x === 0 || x === "0" || x === -1 || x === "-1") {
+                return false;
+              } else {
+                return x;
+              }
+            };
+
+            // This function creates a data element for the case_id
+            function match_id(uid, flag) {
+              return dataElement(uid, case_id);
+            }
+
+            // Updated match function: use the "properties" from state.data
+            function match(uid, flag, conversionFn = converter) {
+              if (properties && flag in properties) {
+                return dataElement(uid, conversionFn(properties[flag]));
+              }
+            }
+
+            const convertToNumeric = value => value;
+
+            // Formats the reported_date (timestamp in ms) to "YYYY-MM-DD"
+            function formatTimestampToDate(timestamp) {
+              const dateObj = new Date(timestamp);
+              const year = dateObj.getFullYear();
+              const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+              const day = String(dateObj.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            }
+
+            // Build the preparedEvent object
+            const preparedEvent = {
+              program: "GaOaL76FraA",
+              orgUnit: orgUnit, // from state.data.orgUnit ("DiszpKrYNg8")
+              occurredAt: formatTimestampToDate(reported_date),
+              status: "COMPLETED",
+              dataValues: [
+                match_id("IsrhSrEFAX8", "case_id"),
+                match("SfLueMvecnc", "age_01day", convertToNumeric),
+                match("wiiDcsQ5pdQ", "age_0_2months", convertToNumeric),
+                match("m5OehFImiIJ", "CHE_B3_DE06"),
+                match("eE4UpNHJQMY", "urgent_referral"),
+                match("Y64yUy6zBEp", "CHE_B23_DE20"),
+                match("Y7RtctxKULG", "CHE_B23_DE19"),
+                match("WjNYqG8zi5V", "CHE_B23_DE03"),
+                match("jmaPh46qxZL", "ALM_B23_DE01"),
+                match("RFMdp6UZuNP", "CHE_B10S1_DE05A"),
+                match("kATEiT6rXkJ", "CHE_B23_DE32"),
+                match("Gcua1eaZ5eC", "CHE_B23_DE17"),
+                match("Dv5Q4FmyvyM", "CHE_B23_DE35"),
+                match("xOTL8X1B2NI", "CHE_B23_DE66"),
+                match("wvIZHqXsAFX", "CHE_B23_DE70"),
+                match("sI5nJKbDXxk", "CHE_B23_DE71"),
+                match("dhLox6Ape1s", "CHE_B23_DE86"),
+                match("PwUUC18At3K", "CHE_B23_DE85"),
+                match("gdr30afwBpC", "CHE_B23_DE88"),
+                match("O7nmBEUP8Se", "CHE_B23_DE91"),
+                match("Km9BtfBd3M7", "CHE_B23_DE92"),
+                match("eqxoTDGxyuQ", "CHE_B23_DE90"),
+                match("jJPlVaVeleR", "CHE_B23_DE81"),
+                match("jpuL5Ovyl2a", "ALM_B23_DE02")
+              ].filter(n => n)
+            };
+
+            console.log('The event', JSON.stringify(preparedEvent, null, 2));
+            return { ...state, preparedEvent, case_id, orgUnit, properties, reported_date };
+          });
+
+      Check-existing-events:
+        name: Check existing events
+        adaptor: '@openfn/language-dhis2@latest'
+        credential: rkenyuri@icrc.org-DHIS2-PLAY-dev-2-40
+        body: |
+          get("events", {
+            orgUnit: state.orgUnit,
+            program: "GaOaL76FraA",
+            filter: `IsrhSrEFAX8:EQ:${state.case_id}`,
+          });
+
+          fn(state => {
+            const events = state.data.events || [];
+            if (events.length > 0) {
+              console.log("Existing event found. Will update.");
+              state.existingEvent = events[0];
+            } else {
+              console.log("No existing event found. Proceeding with create.");
+              state.existingEvent = null;
+            }
+            return state;
+          });
+
+          // collections.set('run-logs', $.case_id, { 'cht-submission': $.data })
+      Create-Event:
+        name: Create Event
+        adaptor: '@openfn/language-dhis2@latest'
+        credential: rkenyuri@icrc.org-DHIS2-PLAY-dev-2-40
+        body: |
+          fn(state => {
+            if (state.existingEvent) {
+              // Set the event ID so that DHIS2 updates the event
+              state.preparedEvent.event = state.existingEvent.event;
+            }
+            return state;
+          });
+
+          create('events', $.preparedEvent, {
+            params: {
+              importStrategy: 'CREATE_AND_UPDATE',
+              atomicMode: 'OBJECT',
+              async: false  // Prefer boolean false here
+            }
+          });
+
+          fn(state => {
+            state.eventId = state.data.bundleReport.typeReportMap.EVENT?.objectReports[0].uid
+            return state
+          })
+
+
+          collections.set('run-logs', `${$.case_id}-dhis2-response`, $.data)
+
+    triggers:
+      webhook:
+        type: webhook
+        enabled: true
+    edges:
+      webhook->OpenFn:
+        source_trigger: webhook
+        target_job: OpenFn
+        condition_type: always
+        enabled: true
+      OpenFn->Check-existing-events:
+        source_job: OpenFn
+        target_job: Check-existing-events
+        condition_type: on_job_success
+        enabled: true
+      Check-existing-events->Create-Event:
+        source_job: Check-existing-events
+        target_job: Create-Event
+        condition_type: on_job_success
+        enabled: true
+  CHT-matchsplit-Webhook:
+    name: CHT matchsplit Webhook
+    jobs:
+      New-job:
+        name: New job
+        adaptor: '@openfn/language-common@latest'
+        credential: null
+        body: |
+          const convertToBool = (val) => {
+            if (typeof val === 'boolean') return val;
+            if (typeof val === 'string') {
+              val = val.toLowerCase().trim();
+              return val === '1' || val === 'true' || val === 'yes';
+            }
+            return !!val;
+          };
+
+          const safeGet = (obj, path, defaultValue = undefined) => {
+            return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;
+          };
+
+          const genderMap = (value) => {
+            if (!value) return undefined;
+            return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';
+          };
+          const matchSplit = (chosenAnswers, target, delimiter = " ") => {
+            let chosenAnswersList = chosenAnswers.split(delimiter);
+            return indexOf(chosenAnswersList, target) != -1;
+          };
+          const convertToNumeric = (value) => {
+            return value
+          }
+          const mapReport = (report) => {
+            const dataElements = [
+              { dataElement: "dummyID", path: "properties.as_dehydration" },
+              { dataElement: "dummyID", path: "properties.p_age" },
+              { dataElement: "dummyID", path: "properties.p_height" },
+              { dataElement: "dummyID", path: "properties.p_temp" },
+              { dataElement: "dummyID", path: "properties.p_weight" },
+              { dataElement: "dummyID", path: "properties.p_heamoglobin" },
+              { dataElement: "dummyID", path: "case_id" },
+              { dataElement: "dummyID", path: "properties.as_danger", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.as_coryza", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.continue_afterlab", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.st_reason_visit", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_anemia", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_anemia_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_conjunctivitis", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_dehydration_severe", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.d_dehydration_some", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_deworming_needed", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_diarrhoea_cholera_like", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_diarrhoea_non_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_diarrhoea_severe_persistent",  transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.d_diarrhoea_watery", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.d_disease_diarrhoeal_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_febrile_refer", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_febrile_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_febrile_severe_no_malaria", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_febrile_severe_persistent", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_severe_malaria_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_severe_no_malaria", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_dysentery", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.d_dysentery_bacterial", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_ear_acute_w_antibiotics", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_ear_acute_w_discharge", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_ear_no_infection", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_fever", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_jaundice", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_malaria", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_malaria_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_malaria_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_malnutrition_cannot_assess", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_mam", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_sam_w_complications", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_sam_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_sam_wa_complications", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_mastoidity", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_measles", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_measles_w_complications", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_measles_severe_complicated", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_no_dehydration", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_no_malnutrition", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_pneumonia", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_pneumonia_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_throat_likelly_streptococcal", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_throat_viral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_throat_abcess", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_tb_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_typhoid_fever_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_urti", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_uti", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_infection_likely_viral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_vitA_needed", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_wheezing_episode", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_wheezing_recurrent", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_wheezing_resistant", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_pcm_past_12h", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.p_gender", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.p_muac", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_cough", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_cough_past_14d", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_danger_ask", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_danger_look", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_diarrhoea_14d", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_ear_discharge", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_ear_discharge_past_14d", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_ear_pain", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_fever_past_7d", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.ask_glucose_under_3mmol", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_immunizations_received", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_fever_past_24h", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_dysuria", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.st_tt_past", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_rdt_available", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_haemoglob_available", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_T_not_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_urine_test_available", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_abcess_drainage", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_abcess_referral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_bladder", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_abcess_small", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_boils", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_chickenpox", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_eczema", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_cellulitis_erysipelas", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_impetigo_extensive", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_lice_head", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_herpes", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_herpes_referral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_impetigo_simple", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_chickenpox_infected", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_eczema_infected", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_scabies_infected", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_rash_likelly_viral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_mycosis", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_candidiasis_oral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_pitiryasis_versicolor", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_scabies_simple", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_cellulitis_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_shingles", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_skin", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_tinea_capitis", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_tinea_corporis", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_uti_likely", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_ulcer_referral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_urine_test_available2", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_worms", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.str_further_comment", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_diagnosis_further", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.str_diagnosis_further", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_rdt_positive", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_urine_test_positive", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_measles_past_3m_mam", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.st-followup_condition", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.has_child_improved", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.st-followup_reason", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_rutf_planned_followup", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_glucose_below_3_conv", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_glucose_test_available_conv", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_cough", transform: { func: matchSplit, args: ["s_cough", " "] }},
+              { dataElement: "dummyID", path: "properties.s_immunizations_received", transform: { func: matchSplit, args: ["s_cough", " "] } },
+              { dataElement: "dummyID", path: "properties.s_danger_look", transform: { func: matchSplit, args: ["s_convulsion", " "] } },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_clouded_cornea", " "] } },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_oedema_bilateral", " "] } },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_oedema_bilateral_1_2plus", " "] } },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_oedema_bilateral_3plus", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_wasting_severe", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_no_weight_gain", " "] } },
+              { dataElement: "dummyID", path: "properties.s_chest_wall_indrawing", transform: { func: matchSplit, args: ["s_not_sucking", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_chest_wall_indrawing", transform: { func: matchSplit, args: ["s_lower_chest_wall_indrawing", " "] } },
+              { dataElement: "dummyID", path: "properties.s_chest_wall_indrawing", transform: { func: matchSplit, args: ["s_stridor", " "] } },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cyanosis", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_weight_loss", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cough_n_appetite_loss", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cough_n_weak", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cold_sweat", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_contact_tb", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cough_blood", " "] } }
+            ];
+            return {
+              dataValues: dataElements.map(({ dataElement, path, transform }) => {
+                let value = safeGet(report, path);
+            
+                if (transform) {
+                  if (typeof transform === "function") {
+                    // Simple transform function
+                    value = transform(value);
+                  } else if (typeof transform === "object" && transform.func) {
+                    // Transform function with additional arguments
+                    const args = [value, ...(transform.args || [])];
+                    value = transform.func.apply(null, args);
+                  }
+                }
+            
+                return {
+                  dataElement,
+                  value,
+                };
+              })
+            };
+          };
+
+          fn((state) => {
+            const { report } = state.data;
+
+            state.dhis2Mapping = {
+              orgUnit: state.data.orgUnit,
+              occurredAt: state.data.reported_date,
+              program: "wNRmGnc1t11",
+              status: "COMBLETED",
+              ...mapReport(report)
+            };
+
+            console.log(state.dhis2Mapping);
+            return state;
+          });
+    triggers:
+      webhook:
+        type: webhook
+        enabled: false
+    edges:
+      webhook->New-job:
+        source_trigger: webhook
+        target_job: New-job
+        condition_type: always
+        enabled: true
   CHT-webhook:
     name: CHT webhook
     jobs:
@@ -88,6 +502,7 @@ workflows:
             const { report } = state.data;
 
             state.dhis2Mapping = {
+            
               orgUnit: "DiszpKrYNg8",
               occurredAt: report.reported_date,
               program: "wNRmGnc1t11",
@@ -102,7 +517,7 @@ workflows:
       Create-Event-Program:
         name: Create Event Program
         adaptor: '@openfn/language-dhis2@6.1.0'
-        credential: mtuchi@openfn.org-DHIS2-2-40-6
+        credential: mtuchi@openfn.org-DHIS2-2-40-7
         body: |
           // Create events
           create("events", $.dhis2Mapping);
