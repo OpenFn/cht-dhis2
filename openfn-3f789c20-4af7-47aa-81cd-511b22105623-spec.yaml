@@ -17,8 +17,8 @@ workflows:
   CHT-DHIS2:
     name: CHT-DHIS2
     jobs:
-      OpenFn:
-        name: OpenFn
+      Map-CHT-Submission:
+        name: Map CHT Submission
         adaptor: '@openfn/language-common@latest'
         credential: null
         body: |
@@ -122,8 +122,8 @@ workflows:
             return { ...state, preparedEvent, case_id, orgUnit, properties, reported_date };
           });
 
-      Check-existing-events:
-        name: Check existing events
+      Check-Existing-Events:
+        name: Check Existing Events
         adaptor: '@openfn/language-dhis2@6.3.1'
         credential: rkenyuri@icrc.org-DHIS2-PLAY-dev-2-40
         body: |
@@ -180,18 +180,18 @@ workflows:
         type: webhook
         enabled: true
     edges:
-      webhook->OpenFn:
+      webhook->Map-CHT-Submission:
         source_trigger: webhook
-        target_job: OpenFn
+        target_job: Map-CHT-Submission
         condition_type: always
         enabled: true
-      OpenFn->Check-existing-events:
-        source_job: OpenFn
-        target_job: Check-existing-events
+      Map-CHT-Submission->Check-Existing-Events:
+        source_job: Map-CHT-Submission
+        target_job: Check-Existing-Events
         condition_type: on_job_success
         enabled: true
-      Check-existing-events->Create-Event:
-        source_job: Check-existing-events
+      Check-Existing-Events->Create-Event:
+        source_job: Check-Existing-Events
         target_job: Create-Event
         condition_type: on_job_success
         enabled: true

@@ -5,7 +5,6 @@
   "concurrency": null,
   "inserted_at": "2024-11-07T11:32:07Z",
   "updated_at": "2025-03-05T08:04:08Z",
-  "scheduled_deletion": null,
   "project_credentials": {
     "mtuchi@openfn.org-DHIS2-Dev": {
       "id": "929e63c8-77d0-4859-85d0-e138fabbb963",
@@ -23,6 +22,7 @@
       "owner": "rkenyuri@icrc.org"
     }
   },
+  "scheduled_deletion": null,
   "history_retention_period": 365,
   "dataclip_retention_period": null,
   "retention_policy": "retain_all",
@@ -32,68 +32,7 @@
       "name": "run-logs"
     }
   },
-  "requires_mfa": false,
   "workflows": {
-    "CHT-DHIS2": {
-      "id": "a3b84c02-58f4-4ebe-bca4-13b42dc536c6",
-      "name": "CHT-DHIS2",
-      "inserted_at": "2025-03-20T16:29:43.863255Z",
-      "lock_version": 41,
-      "triggers": {
-        "webhook": {
-          "enabled": true,
-          "id": "ba07e26f-c7ca-4bba-80ef-aa19c2044d3d",
-          "type": "webhook"
-        }
-      },
-      "jobs": {
-        "OpenFn": {
-          "id": "806f78b4-bccd-4805-8ab5-06e3d31083e5",
-          "name": "OpenFn",
-          "body": "collections.set('run-logs', i => `${i.case_id}-cht-submission`, $.data)\n\nfn(state => {\n  console.log(\"CHT to DHIS2 preparation\");\n\n  // Destructure the needed values from state.data\n  const { case_id, orgUnit, properties, reported_date } = state.data;\n\n  // Helper functions\n  function indexOf(collection, target) {\n    for (let i = 0; i < collection.length; i++) {\n      if (collection[i] === target) {\n        return i;\n      }\n    }\n    return -1;\n  }\n\n  function checkAnswers(chosenAnswers, target, delimiter = \" \") {\n    if (chosenAnswers === undefined) { return undefined; }\n    let chosenAnswersList = chosenAnswers.split(delimiter);\n    return indexOf(chosenAnswersList, target) !== -1;\n  }\n\n  function dataElement(dataElement, value, comment) {\n    return { dataElement, value, comment };\n  }\n\n  // Converter function: converts 1/\"1\" to true, 0/\"0\" to false\n  const converter = function (x) {\n    if (x === 1 || x === \"1\") {\n      return true;\n    } else if (x === 0 || x === \"0\" || x === -1 || x === \"-1\") {\n      return false;\n    } else {\n      return x;\n    }\n  };\n\n  // This function creates a data element for the case_id\n  function match_id(uid, flag) {\n    return dataElement(uid, case_id);\n  }\n\n  // Updated match function: use the \"properties\" from state.data\n  function match(uid, flag, conversionFn = converter) {\n    if (properties && flag in properties) {\n      return dataElement(uid, conversionFn(properties[flag]));\n    }\n  }\n\n  const convertToNumeric = value => value;\n\n  // Formats the reported_date (timestamp in ms) to \"YYYY-MM-DD\"\n  function formatTimestampToDate(timestamp) {\n    const dateObj = new Date(timestamp);\n    const year = dateObj.getFullYear();\n    const month = String(dateObj.getMonth() + 1).padStart(2, '0');\n    const day = String(dateObj.getDate()).padStart(2, '0');\n    return `${year}-${month}-${day}`;\n  }\n\n  // Build the preparedEvent object\n  const preparedEvent = {\n    program: \"GaOaL76FraA\",\n    orgUnit: orgUnit, // from state.data.orgUnit (\"DiszpKrYNg8\")\n    occurredAt: formatTimestampToDate(reported_date),\n    status: \"COMPLETED\",\n    dataValues: [\n      match_id(\"IsrhSrEFAX8\", \"case_id\"),\n      match(\"SfLueMvecnc\", \"age_01day\", convertToNumeric),\n      match(\"wiiDcsQ5pdQ\", \"age_0_2months\", convertToNumeric),\n      match(\"m5OehFImiIJ\", \"CHE_B3_DE06\"),\n      match(\"eE4UpNHJQMY\", \"urgent_referral\"),\n      match(\"Y64yUy6zBEp\", \"CHE_B23_DE20\"),\n      match(\"Y7RtctxKULG\", \"CHE_B23_DE19\"),\n      match(\"WjNYqG8zi5V\", \"CHE_B23_DE03\"),\n      match(\"jmaPh46qxZL\", \"ALM_B23_DE01\"),\n      match(\"RFMdp6UZuNP\", \"CHE_B10S1_DE05A\"),\n      match(\"kATEiT6rXkJ\", \"CHE_B23_DE32\"),\n      match(\"Gcua1eaZ5eC\", \"CHE_B23_DE17\"),\n      match(\"Dv5Q4FmyvyM\", \"CHE_B23_DE35\"),\n      match(\"xOTL8X1B2NI\", \"CHE_B23_DE66\"),\n      match(\"wvIZHqXsAFX\", \"CHE_B23_DE70\"),\n      match(\"sI5nJKbDXxk\", \"CHE_B23_DE71\"),\n      match(\"dhLox6Ape1s\", \"CHE_B23_DE86\"),\n      match(\"PwUUC18At3K\", \"CHE_B23_DE85\"),\n      match(\"gdr30afwBpC\", \"CHE_B23_DE88\"),\n      match(\"O7nmBEUP8Se\", \"CHE_B23_DE91\"),\n      match(\"Km9BtfBd3M7\", \"CHE_B23_DE92\"),\n      match(\"eqxoTDGxyuQ\", \"CHE_B23_DE90\"),\n      match(\"jJPlVaVeleR\", \"CHE_B23_DE81\"),\n      match(\"jpuL5Ovyl2a\", \"ALM_B23_DE02\")\n    ].filter(n => n)\n  };\n\n  console.log('The event', JSON.stringify(preparedEvent, null, 2));\n  return { ...state, preparedEvent, case_id, orgUnit, properties, reported_date };\n});\n",
-          "adaptor": "@openfn/language-common@latest",
-          "project_credential_id": null
-        },
-        "Check-existing-events": {
-          "id": "77328d2e-4b86-4e4b-8fbd-0f96c5f1fa92",
-          "name": "Check existing events",
-          "body": "get(\"events\", {\n  orgUnit: state.orgUnit,\n  program: \"GaOaL76FraA\",\n  filter: `IsrhSrEFAX8:EQ:${state.case_id}`,\n});\n\nfn(state => {\n  const events = state.data.events || [];\n  if (events.length > 0) {\n    console.log(\"Existing event found. Will update.\");\n    state.existingEvent = events[0];\n  } else {\n    console.log(\"No existing event found. Proceeding with create.\");\n    state.existingEvent = null;\n  }\n  return state;\n});\n\n// collections.set('run-logs', $.case_id, { 'cht-submission': $.data })",
-          "adaptor": "@openfn/language-dhis2@6.3.1",
-          "project_credential_id": "56030854-1daf-4a28-aa09-7beb0140c9d9"
-        },
-        "Create-Event": {
-          "id": "fce084cf-a844-4ff8-8aae-204efac1ce0f",
-          "name": "Create Event",
-          "body": "fn(state => {\n  if (state.existingEvent) {\n    // Set the event ID so that DHIS2 updates the event\n    state.preparedEvent.event = state.existingEvent.event;\n  }\n  return state;\n});\n\ncreate('events', $.preparedEvent, {\n  params: {\n    importStrategy: 'CREATE_AND_UPDATE',\n    atomicMode: 'OBJECT',\n    async: false  // Prefer boolean false here\n  }\n});\n\nfn(state => {\n  state.eventId = state.data.bundleReport.typeReportMap.EVENT?.objectReports[0].uid\n  return state\n})\n\n\ncollections.set('run-logs', i => `${i.case_id}-dhis2-response`, { case_id: $.case_id, ...$.data })\n",
-          "adaptor": "@openfn/language-dhis2@6.3.1",
-          "project_credential_id": "56030854-1daf-4a28-aa09-7beb0140c9d9"
-        }
-      },
-      "edges": {
-        "webhook->OpenFn": {
-          "enabled": true,
-          "id": "f0390506-831b-4e71-87ce-fa5da234acce",
-          "target_job_id": "806f78b4-bccd-4805-8ab5-06e3d31083e5",
-          "source_trigger_id": "ba07e26f-c7ca-4bba-80ef-aa19c2044d3d",
-          "condition_type": "always"
-        },
-        "OpenFn->Check-existing-events": {
-          "enabled": true,
-          "id": "ddb7dcde-bb73-4355-8b27-559bc4f240ee",
-          "target_job_id": "77328d2e-4b86-4e4b-8fbd-0f96c5f1fa92",
-          "source_job_id": "806f78b4-bccd-4805-8ab5-06e3d31083e5",
-          "condition_type": "on_job_success"
-        },
-        "Check-existing-events->Create-Event": {
-          "enabled": true,
-          "id": "c33a8931-5641-4f0a-815b-af04183e14b5",
-          "target_job_id": "fce084cf-a844-4ff8-8aae-204efac1ce0f",
-          "source_job_id": "77328d2e-4b86-4e4b-8fbd-0f96c5f1fa92",
-          "condition_type": "on_job_success",
-          "condition_expression": "state.data.events.length == 0"
-        }
-      }
-    },
     "CHT-MatchSplit-Mapping": {
       "id": "5f295a1b-8b13-4fe8-a80a-cd539a476995",
       "name": "CHT-MatchSplit-Mapping",
@@ -214,6 +153,67 @@
           "condition_type": "on_job_success"
         }
       }
+    },
+    "CHT-DHIS2": {
+      "id": "a3b84c02-58f4-4ebe-bca4-13b42dc536c6",
+      "name": "CHT-DHIS2",
+      "inserted_at": "2025-03-26T08:54:16.937313Z",
+      "lock_version": 43,
+      "triggers": {
+        "webhook": {
+          "enabled": true,
+          "id": "ba07e26f-c7ca-4bba-80ef-aa19c2044d3d",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "Map-CHT-Submission": {
+          "id": "806f78b4-bccd-4805-8ab5-06e3d31083e5",
+          "name": "Map CHT Submission",
+          "body": "collections.set('run-logs', i => `${i.case_id}-cht-submission`, $.data)\n\nfn(state => {\n  console.log(\"CHT to DHIS2 preparation\");\n\n  // Destructure the needed values from state.data\n  const { case_id, orgUnit, properties, reported_date } = state.data;\n\n  // Helper functions\n  function indexOf(collection, target) {\n    for (let i = 0; i < collection.length; i++) {\n      if (collection[i] === target) {\n        return i;\n      }\n    }\n    return -1;\n  }\n\n  function checkAnswers(chosenAnswers, target, delimiter = \" \") {\n    if (chosenAnswers === undefined) { return undefined; }\n    let chosenAnswersList = chosenAnswers.split(delimiter);\n    return indexOf(chosenAnswersList, target) !== -1;\n  }\n\n  function dataElement(dataElement, value, comment) {\n    return { dataElement, value, comment };\n  }\n\n  // Converter function: converts 1/\"1\" to true, 0/\"0\" to false\n  const converter = function (x) {\n    if (x === 1 || x === \"1\") {\n      return true;\n    } else if (x === 0 || x === \"0\" || x === -1 || x === \"-1\") {\n      return false;\n    } else {\n      return x;\n    }\n  };\n\n  // This function creates a data element for the case_id\n  function match_id(uid, flag) {\n    return dataElement(uid, case_id);\n  }\n\n  // Updated match function: use the \"properties\" from state.data\n  function match(uid, flag, conversionFn = converter) {\n    if (properties && flag in properties) {\n      return dataElement(uid, conversionFn(properties[flag]));\n    }\n  }\n\n  const convertToNumeric = value => value;\n\n  // Formats the reported_date (timestamp in ms) to \"YYYY-MM-DD\"\n  function formatTimestampToDate(timestamp) {\n    const dateObj = new Date(timestamp);\n    const year = dateObj.getFullYear();\n    const month = String(dateObj.getMonth() + 1).padStart(2, '0');\n    const day = String(dateObj.getDate()).padStart(2, '0');\n    return `${year}-${month}-${day}`;\n  }\n\n  // Build the preparedEvent object\n  const preparedEvent = {\n    program: \"GaOaL76FraA\",\n    orgUnit: orgUnit, // from state.data.orgUnit (\"DiszpKrYNg8\")\n    occurredAt: formatTimestampToDate(reported_date),\n    status: \"COMPLETED\",\n    dataValues: [\n      match_id(\"IsrhSrEFAX8\", \"case_id\"),\n      match(\"SfLueMvecnc\", \"age_01day\", convertToNumeric),\n      match(\"wiiDcsQ5pdQ\", \"age_0_2months\", convertToNumeric),\n      match(\"m5OehFImiIJ\", \"CHE_B3_DE06\"),\n      match(\"eE4UpNHJQMY\", \"urgent_referral\"),\n      match(\"Y64yUy6zBEp\", \"CHE_B23_DE20\"),\n      match(\"Y7RtctxKULG\", \"CHE_B23_DE19\"),\n      match(\"WjNYqG8zi5V\", \"CHE_B23_DE03\"),\n      match(\"jmaPh46qxZL\", \"ALM_B23_DE01\"),\n      match(\"RFMdp6UZuNP\", \"CHE_B10S1_DE05A\"),\n      match(\"kATEiT6rXkJ\", \"CHE_B23_DE32\"),\n      match(\"Gcua1eaZ5eC\", \"CHE_B23_DE17\"),\n      match(\"Dv5Q4FmyvyM\", \"CHE_B23_DE35\"),\n      match(\"xOTL8X1B2NI\", \"CHE_B23_DE66\"),\n      match(\"wvIZHqXsAFX\", \"CHE_B23_DE70\"),\n      match(\"sI5nJKbDXxk\", \"CHE_B23_DE71\"),\n      match(\"dhLox6Ape1s\", \"CHE_B23_DE86\"),\n      match(\"PwUUC18At3K\", \"CHE_B23_DE85\"),\n      match(\"gdr30afwBpC\", \"CHE_B23_DE88\"),\n      match(\"O7nmBEUP8Se\", \"CHE_B23_DE91\"),\n      match(\"Km9BtfBd3M7\", \"CHE_B23_DE92\"),\n      match(\"eqxoTDGxyuQ\", \"CHE_B23_DE90\"),\n      match(\"jJPlVaVeleR\", \"CHE_B23_DE81\"),\n      match(\"jpuL5Ovyl2a\", \"ALM_B23_DE02\")\n    ].filter(n => n)\n  };\n\n  console.log('The event', JSON.stringify(preparedEvent, null, 2));\n  return { ...state, preparedEvent, case_id, orgUnit, properties, reported_date };\n});\n",
+          "adaptor": "@openfn/language-common@latest",
+          "project_credential_id": null
+        },
+        "Check-Existing-Events": {
+          "id": "77328d2e-4b86-4e4b-8fbd-0f96c5f1fa92",
+          "name": "Check Existing Events",
+          "body": "get(\"events\", {\n  orgUnit: state.orgUnit,\n  program: \"GaOaL76FraA\",\n  filter: `IsrhSrEFAX8:EQ:${state.case_id}`,\n});\n\nfn(state => {\n  const events = state.data.events || [];\n  if (events.length > 0) {\n    console.log(\"Existing event found. Will update.\");\n    state.existingEvent = events[0];\n  } else {\n    console.log(\"No existing event found. Proceeding with create.\");\n    state.existingEvent = null;\n  }\n  return state;\n});\n\n// collections.set('run-logs', $.case_id, { 'cht-submission': $.data })",
+          "adaptor": "@openfn/language-dhis2@6.3.1",
+          "project_credential_id": "56030854-1daf-4a28-aa09-7beb0140c9d9"
+        },
+        "Create-Event": {
+          "id": "fce084cf-a844-4ff8-8aae-204efac1ce0f",
+          "name": "Create Event",
+          "body": "fn(state => {\n  if (state.existingEvent) {\n    // Set the event ID so that DHIS2 updates the event\n    state.preparedEvent.event = state.existingEvent.event;\n  }\n  return state;\n});\n\ncreate('events', $.preparedEvent, {\n  params: {\n    importStrategy: 'CREATE_AND_UPDATE',\n    atomicMode: 'OBJECT',\n    async: false  // Prefer boolean false here\n  }\n});\n\nfn(state => {\n  state.eventId = state.data.bundleReport.typeReportMap.EVENT?.objectReports[0].uid\n  return state\n})\n\n\ncollections.set('run-logs', i => `${i.case_id}-dhis2-response`, { case_id: $.case_id, ...$.data })\n",
+          "adaptor": "@openfn/language-dhis2@6.3.1",
+          "project_credential_id": "56030854-1daf-4a28-aa09-7beb0140c9d9"
+        }
+      },
+      "edges": {
+        "webhook->Map-CHT-Submission": {
+          "enabled": true,
+          "id": "f0390506-831b-4e71-87ce-fa5da234acce",
+          "target_job_id": "806f78b4-bccd-4805-8ab5-06e3d31083e5",
+          "source_trigger_id": "ba07e26f-c7ca-4bba-80ef-aa19c2044d3d",
+          "condition_type": "always"
+        },
+        "Map-CHT-Submission->Check-Existing-Events": {
+          "enabled": true,
+          "id": "ddb7dcde-bb73-4355-8b27-559bc4f240ee",
+          "target_job_id": "77328d2e-4b86-4e4b-8fbd-0f96c5f1fa92",
+          "source_job_id": "806f78b4-bccd-4805-8ab5-06e3d31083e5",
+          "condition_type": "on_job_success"
+        },
+        "Check-Existing-Events->Create-Event": {
+          "enabled": true,
+          "id": "c33a8931-5641-4f0a-815b-af04183e14b5",
+          "target_job_id": "fce084cf-a844-4ff8-8aae-204efac1ce0f",
+          "source_job_id": "77328d2e-4b86-4e4b-8fbd-0f96c5f1fa92",
+          "condition_type": "on_job_success",
+          "condition_expression": "state.data.events.length == 0"
+        }
+      }
     }
-  }
+  },
+  "requires_mfa": false
 }
