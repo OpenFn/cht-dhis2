@@ -5,6 +5,7 @@
   "concurrency": null,
   "inserted_at": "2024-11-07T11:32:07Z",
   "updated_at": "2025-03-05T08:04:08Z",
+  "scheduled_deletion": null,
   "project_credentials": {
     "mtuchi@openfn.org-DHIS2-Dev": {
       "id": "929e63c8-77d0-4859-85d0-e138fabbb963",
@@ -22,7 +23,6 @@
       "owner": "rkenyuri@icrc.org"
     }
   },
-  "scheduled_deletion": null,
   "history_retention_period": 365,
   "dataclip_retention_period": null,
   "retention_policy": "retain_all",
@@ -32,6 +32,7 @@
       "name": "run-logs"
     }
   },
+  "requires_mfa": false,
   "workflows": {
     "CHT-DHIS2": {
       "id": "a3b84c02-58f4-4ebe-bca4-13b42dc536c6",
@@ -214,6 +215,5 @@
         }
       }
     }
-  },
-  "requires_mfa": false
+  }
 }
