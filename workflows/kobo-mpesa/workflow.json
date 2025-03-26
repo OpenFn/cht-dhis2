@@ -1,0 +1,20 @@
+{
+    "workflow": {
+        "steps": [
+            {
+                "id": "fetch-submissions",
+                "adaptor": "kobotoolbox@latest",
+                "configuration": "tmp/kobo-creds.json",
+                "expression": "fetch-submissions.js",
+                "next": {
+                    "mapping": "!state.errors"
+                }
+            },
+            {
+                "id": "mpesa-request",
+                "adaptor": "http@latest",
+                "expression": "mpesa-request.js"
+            }
+        ]
+    }
+}

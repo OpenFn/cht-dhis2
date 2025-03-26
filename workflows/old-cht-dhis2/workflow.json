@@ -1,0 +1,20 @@
+{
+    "workflow": {
+        "steps": [
+            {
+                "id": "mapping",
+                "adaptor": "common@2.3.1",
+                "expression": "mapping.js",
+                "next": {
+                    "create-event": "!state.errors"
+                }
+            },
+            {
+                "id": "create-event",
+                "adaptor": "dhis2@6.3.1",
+                "configuration": "tmp/dhis2-creds.json",
+                "expression": "create-event.js"
+            }
+        ]
+    }
+}

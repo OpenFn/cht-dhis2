@@ -1,28 +1,30 @@
 {
-  "options": {
-    "start": "get-data",
-    "timeout": 1200000
-  },
   "workflow": {
     "steps": [
       {
-        "id": "get-data",
-        "adaptor": "postgresql@3.4.6",
-        "state": {},
-        "configuration": "./tmp/db-credential.json",
-        "expression": "./jobs/1-getPatientData.js",
+        "id": "map-submission",
+        "adaptors": [
+          "collections, common@2.3.1"
+        ],
+        "expression": "map-cht-submission.js",
         "next": {
-          "post-data": {
-            "condition": "true"
-          }
+          "check-events": "!state.errors"
         }
       },
       {
-        "id": "post-data",
-        "adaptor": "http@latest",
-        "configuration": "./tmp/api-credential.json",
-        "state": {},
-        "expression": "./jobs/2-postData.js"
+        "id": "check-events",
+        "adaptor": "dhis2@6.3.1",
+        "configuration": "tmp/dhis2-creds.json",
+        "expression": "check-events.js",
+        "next": {
+          "create-event": "!state.errors"
+        }
+      },
+      {
+        "id": "create-event",
+        "adaptor": "dhis2@6.3.1",
+        "configuration": "tmp/dhis2-creds.json",
+        "expression": "create-event.js"
       }
     ]
   }
