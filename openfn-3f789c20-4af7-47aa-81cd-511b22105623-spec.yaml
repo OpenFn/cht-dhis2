@@ -195,11 +195,11 @@ workflows:
         target_job: Create-Event
         condition_type: on_job_success
         enabled: true
-  CHT-matchsplit-Webhook:
-    name: CHT matchsplit Webhook
+  CHT-MatchSplit-Mapping:
+    name: CHT-MatchSplit-Mapping
     jobs:
-      New-job:
-        name: New job
+      Mappings:
+        name: Mappings
         adaptor: '@openfn/language-common@latest'
         credential: null
         body: |
@@ -417,13 +417,50 @@ workflows:
         type: webhook
         enabled: false
     edges:
+      webhook->Mappings:
+        source_trigger: webhook
+        target_job: Mappings
+        condition_type: always
+        enabled: true
+  KOBO-Mpesa:
+    name: KOBO-Mpesa
+    jobs:
+      New-job:
+        name: New job
+        adaptor: '@openfn/language-kobotoolbox@latest'
+        credential: null
+        body: |
+          // Check out the Job Writing Guide for help getting started:
+          // https://docs.openfn.org/documentation/jobs/job-writing-guide
+
+          getSubmissions('aXecHjmbATuF6iGFmvBLBX', { query: { _submission_time:{ $gte: "2022-06-12T21:54:20" } } });
+      Mpesa-request:
+        name: Mpesa request
+        adaptor: '@openfn/language-http@latest'
+        credential: null
+        body: |
+          get('https://catfact.ninja/fact', {
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+    triggers:
+      webhook:
+        type: webhook
+        enabled: false
+    edges:
       webhook->New-job:
         source_trigger: webhook
         target_job: New-job
         condition_type: always
         enabled: true
-  CHT-webhook:
-    name: CHT webhook
+      New-job->Mpesa-request:
+        source_job: New-job
+        target_job: Mpesa-request
+        condition_type: on_job_success
+        enabled: true
+  Old-CHT-DHIS2:
+    name: Old-CHT-DHIS2
     jobs:
       DHIS2-mapping:
         name: DHIS2 mapping
@@ -524,7 +561,7 @@ workflows:
     triggers:
       webhook:
         type: webhook
-        enabled: true
+        enabled: false
     edges:
       webhook->DHIS2-mapping:
         source_trigger: webhook
@@ -534,93 +571,5 @@ workflows:
       DHIS2-mapping->Create-Event-Program:
         source_job: DHIS2-mapping
         target_job: Create-Event-Program
-        condition_type: on_job_success
-        enabled: true
-  KOBO-Mpesa:
-    name: KOBO-Mpesa
-    jobs:
-      New-job:
-        name: New job
-        adaptor: '@openfn/language-kobotoolbox@latest'
-        credential: null
-        body: |
-          // Check out the Job Writing Guide for help getting started:
-          // https://docs.openfn.org/documentation/jobs/job-writing-guide
-
-          getSubmissions('aXecHjmbATuF6iGFmvBLBX', { query: { _submission_time:{ $gte: "2022-06-12T21:54:20" } } });
-      Mpesa-request:
-        name: Mpesa request
-        adaptor: '@openfn/language-http@latest'
-        credential: null
-        body: |
-          get('https://catfact.ninja/fact', {
-            headers: {
-              'Accept': 'application/json'
-            }
-          });
-    triggers:
-      webhook:
-        type: webhook
-        enabled: false
-    edges:
-      webhook->New-job:
-        source_trigger: webhook
-        target_job: New-job
-        condition_type: always
-        enabled: true
-      New-job->Mpesa-request:
-        source_job: New-job
-        target_job: Mpesa-request
-        condition_type: on_job_success
-        enabled: true
-  Sample-Workflow:
-    name: Sample Workflow
-    jobs:
-      Get-Patients:
-        name: Get Patients
-        adaptor: '@openfn/language-cht@latest'
-        credential: null
-        body: |
-          
-          // Check out the Job Writing Guide for help getting started:
-          // https://docs.openfn.org/documentation/jobs/job-writing-guide
-
-      Transform-and-map-patients:
-        name: Transform and map patients
-        adaptor: '@openfn/language-common@latest'
-        credential: null
-        body: |
-          
-          // Check out the Job Writing Guide for help getting started:
-          // https://docs.openfn.org/documentation/jobs/job-writing-guide
-
-      Load-to-DHIS2:
-        name: Load to DHIS2
-        adaptor: '@openfn/language-dhis2@6.3.1'
-        credential: mtuchi@openfn.org-DHIS2-Dev
-        body: |
-          
-          // Check out the Job Writing Guide for help getting started:
-          // https://docs.openfn.org/documentation/jobs/job-writing-guide
-
-    triggers:
-      cron:
-        type: cron
-        cron_expression: '0 0 * * *'
-        enabled: true
-    edges:
-      cron->Get-Patients:
-        source_trigger: cron
-        target_job: Get-Patients
-        condition_type: always
-        enabled: true
-      Get-Patients->Transform-and-map-patients:
-        source_job: Get-Patients
-        target_job: Transform-and-map-patients
-        condition_type: on_job_success
-        enabled: true
-      Transform-and-map-patients->Load-to-DHIS2:
-        source_job: Transform-and-map-patients
-        target_job: Load-to-DHIS2
         condition_type: on_job_success
         enabled: true

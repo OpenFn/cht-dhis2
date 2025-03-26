@@ -5,7 +5,6 @@
   "concurrency": null,
   "inserted_at": "2024-11-07T11:32:07Z",
   "updated_at": "2025-03-05T08:04:08Z",
-  "scheduled_deletion": null,
   "project_credentials": {
     "mtuchi@openfn.org-DHIS2-Dev": {
       "id": "929e63c8-77d0-4859-85d0-e138fabbb963",
@@ -23,6 +22,7 @@
       "owner": "rkenyuri@icrc.org"
     }
   },
+  "scheduled_deletion": null,
   "history_retention_period": 365,
   "dataclip_retention_period": null,
   "retention_policy": "retain_all",
@@ -32,84 +32,7 @@
       "name": "run-logs"
     }
   },
-  "requires_mfa": false,
   "workflows": {
-    "CHT-matchsplit-Webhook": {
-      "id": "5f295a1b-8b13-4fe8-a80a-cd539a476995",
-      "name": "CHT matchsplit Webhook",
-      "inserted_at": "2025-01-23T16:13:38.363488Z",
-      "lock_version": 2,
-      "triggers": {
-        "webhook": {
-          "enabled": false,
-          "id": "49215751-ed5c-4292-80ca-998912e72223",
-          "type": "webhook"
-        }
-      },
-      "jobs": {
-        "New-job": {
-          "id": "09d87797-33a0-4f52-8237-7f47f8443851",
-          "name": "New job",
-          "body": "const convertToBool = (val) => {\n  if (typeof val === 'boolean') return val;\n  if (typeof val === 'string') {\n    val = val.toLowerCase().trim();\n    return val === '1' || val === 'true' || val === 'yes';\n  }\n  return !!val;\n};\n\nconst safeGet = (obj, path, defaultValue = undefined) => {\n  return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;\n};\n\nconst genderMap = (value) => {\n  if (!value) return undefined;\n  return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';\n};\nconst matchSplit = (chosenAnswers, target, delimiter = \" \") => {\n  let chosenAnswersList = chosenAnswers.split(delimiter);\n  return indexOf(chosenAnswersList, target) != -1;\n};\nconst convertToNumeric = (value) => {\n  return value\n}\nconst mapReport = (report) => {\n  const dataElements = [\n    { dataElement: \"dummyID\", path: \"properties.as_dehydration\" },\n    { dataElement: \"dummyID\", path: \"properties.p_age\" },\n    { dataElement: \"dummyID\", path: \"properties.p_height\" },\n    { dataElement: \"dummyID\", path: \"properties.p_temp\" },\n    { dataElement: \"dummyID\", path: \"properties.p_weight\" },\n    { dataElement: \"dummyID\", path: \"properties.p_heamoglobin\" },\n    { dataElement: \"dummyID\", path: \"case_id\" },\n    { dataElement: \"dummyID\", path: \"properties.as_danger\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.as_coryza\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.continue_afterlab\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.st_reason_visit\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_anemia\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_anemia_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_conjunctivitis\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_dehydration_severe\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.d_dehydration_some\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_deworming_needed\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_diarrhoea_cholera_like\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_diarrhoea_non_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_diarrhoea_severe_persistent\",  transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.d_diarrhoea_watery\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.d_disease_diarrhoeal_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_febrile_refer\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_febrile_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_febrile_severe_no_malaria\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_febrile_severe_persistent\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_severe_malaria_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_severe_no_malaria\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_dysentery\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.d_dysentery_bacterial\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_ear_acute_w_antibiotics\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_ear_acute_w_discharge\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_ear_no_infection\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_fever\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_jaundice\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_malaria\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_malaria_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_malaria_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_malnutrition_cannot_assess\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_mam\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_sam_w_complications\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_sam_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_sam_wa_complications\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_mastoidity\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_measles\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_measles_w_complications\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_measles_severe_complicated\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_no_dehydration\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_no_malnutrition\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_pneumonia\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_pneumonia_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_throat_likelly_streptococcal\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_throat_viral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_throat_abcess\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_tb_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_typhoid_fever_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_urti\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_uti\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_infection_likely_viral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_vitA_needed\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_wheezing_episode\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_wheezing_recurrent\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_wheezing_resistant\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_pcm_past_12h\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.p_gender\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.p_muac\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_cough\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_cough_past_14d\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_danger_ask\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_danger_look\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_diarrhoea_14d\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_ear_discharge\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_ear_discharge_past_14d\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_ear_pain\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_fever_past_7d\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.ask_glucose_under_3mmol\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_immunizations_received\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_fever_past_24h\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_dysuria\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.st_tt_past\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_rdt_available\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_haemoglob_available\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_T_not_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_urine_test_available\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_abcess_drainage\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_abcess_referral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_bladder\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_abcess_small\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_boils\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_chickenpox\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_eczema\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_cellulitis_erysipelas\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_impetigo_extensive\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_lice_head\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_herpes\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_herpes_referral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_impetigo_simple\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_chickenpox_infected\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_eczema_infected\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_scabies_infected\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_rash_likelly_viral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_mycosis\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_candidiasis_oral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_pitiryasis_versicolor\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_scabies_simple\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_cellulitis_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_shingles\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_skin\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_tinea_capitis\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_tinea_corporis\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_uti_likely\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_ulcer_referral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_urine_test_available2\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_worms\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.str_further_comment\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_diagnosis_further\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.str_diagnosis_further\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_rdt_positive\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_urine_test_positive\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_measles_past_3m_mam\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.st-followup_condition\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.has_child_improved\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.st-followup_reason\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_rutf_planned_followup\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_glucose_below_3_conv\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_glucose_test_available_conv\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_cough\", transform: { func: matchSplit, args: [\"s_cough\", \" \"] }},\n    { dataElement: \"dummyID\", path: \"properties.s_immunizations_received\", transform: { func: matchSplit, args: [\"s_cough\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_danger_look\", transform: { func: matchSplit, args: [\"s_convulsion\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_clouded_cornea\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_oedema_bilateral\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_oedema_bilateral_1_2plus\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_oedema_bilateral_3plus\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_wasting_severe\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_no_weight_gain\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_chest_wall_indrawing\", transform: { func: matchSplit, args: [\"s_not_sucking\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_chest_wall_indrawing\", transform: { func: matchSplit, args: [\"s_lower_chest_wall_indrawing\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_chest_wall_indrawing\", transform: { func: matchSplit, args: [\"s_stridor\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cyanosis\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_weight_loss\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cough_n_appetite_loss\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cough_n_weak\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cold_sweat\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_contact_tb\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cough_blood\", \" \"] } }\n  ];\n  return {\n    dataValues: dataElements.map(({ dataElement, path, transform }) => {\n      let value = safeGet(report, path);\n  \n      if (transform) {\n        if (typeof transform === \"function\") {\n          // Simple transform function\n          value = transform(value);\n        } else if (typeof transform === \"object\" && transform.func) {\n          // Transform function with additional arguments\n          const args = [value, ...(transform.args || [])];\n          value = transform.func.apply(null, args);\n        }\n      }\n  \n      return {\n        dataElement,\n        value,\n      };\n    })\n  };\n};\n\nfn((state) => {\n  const { report } = state.data;\n\n  state.dhis2Mapping = {\n    orgUnit: state.data.orgUnit,\n    occurredAt: state.data.reported_date,\n    program: \"wNRmGnc1t11\",\n    status: \"COMBLETED\",\n    ...mapReport(report)\n  };\n\n  console.log(state.dhis2Mapping);\n  return state;\n});",
-          "adaptor": "@openfn/language-common@latest",
-          "project_credential_id": null
-        }
-      },
-      "edges": {
-        "webhook->New-job": {
-          "enabled": true,
-          "id": "de56cdaa-f0f9-4974-8011-508a876a289b",
-          "target_job_id": "09d87797-33a0-4f52-8237-7f47f8443851",
-          "source_trigger_id": "49215751-ed5c-4292-80ca-998912e72223",
-          "condition_type": "always"
-        }
-      }
-    },
-    "CHT-webhook": {
-      "id": "6cdd641d-6087-414b-8193-d01d71d3240e",
-      "name": "CHT webhook",
-      "inserted_at": "2025-02-14T12:53:42.922718Z",
-      "lock_version": 57,
-      "triggers": {
-        "webhook": {
-          "enabled": true,
-          "id": "7bf6c1bc-f16f-40c0-89a5-184ae6ae742f",
-          "type": "webhook"
-        }
-      },
-      "jobs": {
-        "DHIS2-mapping": {
-          "id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
-          "name": "DHIS2 mapping",
-          "body": "//TODO: Remove this once we have orgUnit from report\n// const facilities = {\n//   \"712526f6-f826-45a7-a80b-6546ad9fde9d\": \"DiszpKrYNg8\", //corresponding_on_DHIS2,\n// };\n\nconst convertToBool = (val) => {\n  if (typeof val === 'boolean') return val;\n  if (typeof val === 'string') {\n    val = val.toLowerCase().trim();\n    return val === '1' || val === 'true' || val === 'yes';\n  }\n  return !!val;\n};\n\nconst safeGet = (obj, path, defaultValue = undefined) => {\n  return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;\n};\n\nconst genderMap = (value) => {\n  if (!value) return undefined;\n  return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';\n};\n\nconst convertToNumeric = (value) => {\n  if (typeof value === 'number') return value;\n  if (typeof value === 'string') {\n    const parsed = parseFloat(value);\n    return isNaN(parsed) ? undefined : parsed;\n  }\n  return undefined;\n};\n\nconst mapReport = (report) => {\n  const dataElements = [\n    // { dataElement: \"EuiLnVQP7fz\", path: 'fever_detected' },\n    // { dataElement: \"c7DB86yPCPw\", path: 'danger_signs' },\n    // { dataElement: \"pUQ3PxCLBGW\", path: 'symptoms_severity_level' },\n    // { dataElement: \"UkSorKPBQKp\", path: 'd_diarrhoea' },\n    { dataElement: \"mQfnNz6HAxg\", path: \"properties.d_disease_severe_malaria_possible\", transform: convertToBool },\n    { dataElement: \"rUiCXLuXe0D\", path: \"properties.p_id\" },\n    { dataElement: \"L9FyeXeKysL\", path: \"properties.p_gender\", transform: genderMap },\n    { dataElement: \"sRViHZrNOOi\", path: \"properties.p_age\" },\n    { dataElement: \"zWAPsDC96SK\", path: \"properties.p_weight\" },\n    { dataElement: \"nrsvTZKdAxD\", path: \"properties.p_temp\" },\n    { dataElement: \"f8AiyAoBmQZ\", path: \"properties.d_pneumonia\", transform: convertToBool },\n    { dataElement: \"nOqH46e5VmP\", path: \"properties.d_malaria\", transform: convertToBool },\n    { dataElement: \"S6XCvAD6uv6\", path: \"properties.d_scabies_infected\", transform: convertToBool },\n    { dataElement: \"Vg8aEzNouYb\", path: \"properties.d_measles\", transform: convertToBool },\n    { dataElement: \"Ofyvm4Ynqh7\", path: \"properties.ds_amoxicillin\", transform: convertToBool },\n    { dataElement: \"EijcDbR4oWL\", path: \"properties.ds_paracetamol\", transform: convertToNumeric },\n    { dataElement: \"DsiPa2sGoEe\", path: \"properties.ds_erythromycin\", transform: convertToNumeric },\n    { dataElement: \"xpWPRlZlN7b\", path: \"properties.d_deworming_needed\", transform: convertToBool },\n    { dataElement: \"tgUaWBaAIag\", path: \"properties.dur_amoxicillin\" },\n  ];\n\n  return {\n    dataValues: dataElements.map(({ dataElement, path, transform }) => ({\n      dataElement,\n      value: transform ? transform(safeGet(report, path)) : safeGet(report, path),\n    })),\n    notes: [{\n      value: safeGet(report, 'data.closed.doc.contact.notes'),\n      storedBy: safeGet(report, 'data.closed.doc.contact.name'),\n      storedDate: report.reported_date,\n    }],\n  };\n};\n\nfn((state) => {\n  const { report } = state.data;\n\n  state.dhis2Mapping = {\n  \n    orgUnit: \"DiszpKrYNg8\",\n    occurredAt: report.reported_date,\n    program: \"wNRmGnc1t11\",\n    status: \"COMPLETED\",\n    ...mapReport(report)\n  };\n\n  console.log(state.dhis2Mapping);\n  return state;\n});\n",
-          "adaptor": "@openfn/language-common@2.3.0",
-          "project_credential_id": null
-        },
-        "Create-Event-Program": {
-          "id": "5c26c910-7f0d-4cd7-8a71-22eba3d5db3c",
-          "name": "Create Event Program",
-          "body": "// Create events\ncreate(\"events\", $.dhis2Mapping);",
-          "adaptor": "@openfn/language-dhis2@6.1.0",
-          "project_credential_id": "752324bf-1765-4b45-8bdc-478317f8b362"
-        }
-      },
-      "edges": {
-        "webhook->DHIS2-mapping": {
-          "enabled": true,
-          "id": "a80a7125-32af-4159-8684-d014c07e6cfd",
-          "target_job_id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
-          "source_trigger_id": "7bf6c1bc-f16f-40c0-89a5-184ae6ae742f",
-          "condition_type": "always"
-        },
-        "DHIS2-mapping->Create-Event-Program": {
-          "enabled": true,
-          "id": "bc96b14e-af1e-48d8-884a-51d2fc018684",
-          "target_job_id": "5c26c910-7f0d-4cd7-8a71-22eba3d5db3c",
-          "source_job_id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
-          "condition_type": "on_job_success"
-        }
-      }
-    },
     "KOBO-Mpesa": {
       "id": "94d86f5b-12a1-4cd2-8948-9fe65da6b596",
       "name": "KOBO-Mpesa",
@@ -151,66 +74,6 @@
           "id": "3fb5b99d-0c78-42bc-815e-3fcf35d7bc80",
           "target_job_id": "2ee4b011-1896-4cf5-87fe-cf3b9133e4c4",
           "source_job_id": "fbe27271-0b24-4a00-83b5-632666f297bd",
-          "condition_type": "on_job_success"
-        }
-      }
-    },
-    "Sample-Workflow": {
-      "id": "c80ea84e-4a5b-44db-b863-9305d5e225e2",
-      "name": "Sample Workflow",
-      "inserted_at": "2025-03-20T16:29:43.429814Z",
-      "lock_version": 4,
-      "triggers": {
-        "cron": {
-          "enabled": true,
-          "id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
-          "type": "cron",
-          "cron_expression": "0 0 * * *"
-        }
-      },
-      "jobs": {
-        "Get-Patients": {
-          "id": "6c132952-404d-434b-8ee5-c161704c9f86",
-          "name": "Get Patients",
-          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
-          "adaptor": "@openfn/language-cht@latest",
-          "project_credential_id": null
-        },
-        "Transform-and-map-patients": {
-          "id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
-          "name": "Transform and map patients",
-          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
-          "adaptor": "@openfn/language-common@latest",
-          "project_credential_id": null
-        },
-        "Load-to-DHIS2": {
-          "id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7",
-          "name": "Load to DHIS2",
-          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
-          "adaptor": "@openfn/language-dhis2@6.3.1",
-          "project_credential_id": "929e63c8-77d0-4859-85d0-e138fabbb963"
-        }
-      },
-      "edges": {
-        "cron->Get-Patients": {
-          "enabled": true,
-          "id": "3c0a1c52-1f6b-4210-8ead-7d50cea97428",
-          "target_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
-          "source_trigger_id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
-          "condition_type": "always"
-        },
-        "Get-Patients->Transform-and-map-patients": {
-          "enabled": true,
-          "id": "038b5924-a4b4-4434-8f85-d4101aa3da61",
-          "target_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
-          "source_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
-          "condition_type": "on_job_success"
-        },
-        "Transform-and-map-patients->Load-to-DHIS2": {
-          "enabled": true,
-          "id": "818f484f-b685-4352-8553-93514b4df739",
-          "target_job_id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7",
-          "source_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
           "condition_type": "on_job_success"
         }
       }
@@ -274,6 +137,83 @@
           "condition_expression": "state.data.events.length == 0"
         }
       }
+    },
+    "CHT-MatchSplit-Mapping": {
+      "id": "5f295a1b-8b13-4fe8-a80a-cd539a476995",
+      "name": "CHT-MatchSplit-Mapping",
+      "inserted_at": "2025-03-26T08:08:34.717058Z",
+      "lock_version": 5,
+      "triggers": {
+        "webhook": {
+          "enabled": false,
+          "id": "49215751-ed5c-4292-80ca-998912e72223",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "Mappings": {
+          "id": "09d87797-33a0-4f52-8237-7f47f8443851",
+          "name": "Mappings",
+          "body": "const convertToBool = (val) => {\n  if (typeof val === 'boolean') return val;\n  if (typeof val === 'string') {\n    val = val.toLowerCase().trim();\n    return val === '1' || val === 'true' || val === 'yes';\n  }\n  return !!val;\n};\n\nconst safeGet = (obj, path, defaultValue = undefined) => {\n  return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;\n};\n\nconst genderMap = (value) => {\n  if (!value) return undefined;\n  return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';\n};\nconst matchSplit = (chosenAnswers, target, delimiter = \" \") => {\n  let chosenAnswersList = chosenAnswers.split(delimiter);\n  return indexOf(chosenAnswersList, target) != -1;\n};\nconst convertToNumeric = (value) => {\n  return value\n}\nconst mapReport = (report) => {\n  const dataElements = [\n    { dataElement: \"dummyID\", path: \"properties.as_dehydration\" },\n    { dataElement: \"dummyID\", path: \"properties.p_age\" },\n    { dataElement: \"dummyID\", path: \"properties.p_height\" },\n    { dataElement: \"dummyID\", path: \"properties.p_temp\" },\n    { dataElement: \"dummyID\", path: \"properties.p_weight\" },\n    { dataElement: \"dummyID\", path: \"properties.p_heamoglobin\" },\n    { dataElement: \"dummyID\", path: \"case_id\" },\n    { dataElement: \"dummyID\", path: \"properties.as_danger\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.as_coryza\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.continue_afterlab\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.st_reason_visit\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_anemia\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_anemia_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_conjunctivitis\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_dehydration_severe\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.d_dehydration_some\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_deworming_needed\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_diarrhoea_cholera_like\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_diarrhoea_non_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_diarrhoea_severe_persistent\",  transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.d_diarrhoea_watery\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.d_disease_diarrhoeal_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_febrile_refer\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_febrile_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_febrile_severe_no_malaria\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_febrile_severe_persistent\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_severe_malaria_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_disease_severe_no_malaria\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_dysentery\", transform: convertToBool},\n    { dataElement: \"dummyID\", path: \"properties.d_dysentery_bacterial\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_ear_acute_w_antibiotics\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_ear_acute_w_discharge\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_ear_no_infection\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_fever\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_jaundice\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_malaria\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_malaria_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_malaria_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_malnutrition_cannot_assess\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_mam\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_sam_w_complications\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_sam_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_sam_wa_complications\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_mastoidity\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_measles\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_measles_w_complications\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_measles_severe_complicated\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_no_dehydration\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_no_malnutrition\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_pneumonia\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_pneumonia_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_throat_likelly_streptococcal\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_throat_viral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_throat_abcess\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_tb_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_typhoid_fever_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_urti\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_uti\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_infection_likely_viral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_vitA_needed\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_wheezing_episode\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_wheezing_recurrent\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_wheezing_resistant\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_pcm_past_12h\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.p_gender\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.p_muac\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_cough\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_cough_past_14d\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_danger_ask\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_danger_look\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_diarrhoea_14d\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_ear_discharge\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_ear_discharge_past_14d\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_ear_pain\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_fever_past_7d\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.ask_glucose_under_3mmol\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_immunizations_received\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_fever_past_24h\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_dysuria\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.st_tt_past\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_rdt_available\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_haemoglob_available\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_T_not_possible\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_urine_test_available\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_abcess_drainage\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_abcess_referral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_bladder\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_abcess_small\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_boils\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_chickenpox\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_eczema\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_cellulitis_erysipelas\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_impetigo_extensive\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_lice_head\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_herpes\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_herpes_referral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_impetigo_simple\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_chickenpox_infected\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_eczema_infected\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_scabies_infected\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_rash_likelly_viral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_mycosis\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_candidiasis_oral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_pitiryasis_versicolor\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_scabies_simple\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_cellulitis_severe\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_shingles\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_skin\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_tinea_capitis\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_tinea_corporis\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_uti_likely\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_ulcer_referral\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_urine_test_available2\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.d_worms\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.str_further_comment\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_diagnosis_further\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.str_diagnosis_further\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_rdt_positive\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_urine_test_positive\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_measles_past_3m_mam\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.st-followup_condition\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.has_child_improved\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.st-followup_reason\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_rutf_planned_followup\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_glucose_below_3_conv\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.is_glucose_test_available_conv\", transform: convertToBool },\n    { dataElement: \"dummyID\", path: \"properties.s_cough\", transform: { func: matchSplit, args: [\"s_cough\", \" \"] }},\n    { dataElement: \"dummyID\", path: \"properties.s_immunizations_received\", transform: { func: matchSplit, args: [\"s_cough\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_danger_look\", transform: { func: matchSplit, args: [\"s_convulsion\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_clouded_cornea\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_oedema_bilateral\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_oedema_bilateral_1_2plus\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_oedema_bilateral_3plus\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_wasting_severe\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_malnutrition_signs\", transform: { func: matchSplit, args: [\"s_no_weight_gain\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_chest_wall_indrawing\", transform: { func: matchSplit, args: [\"s_not_sucking\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_chest_wall_indrawing\", transform: { func: matchSplit, args: [\"s_lower_chest_wall_indrawing\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_chest_wall_indrawing\", transform: { func: matchSplit, args: [\"s_stridor\", \" \"] } },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cyanosis\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_weight_loss\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cough_n_appetite_loss\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cough_n_weak\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cold_sweat\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_contact_tb\", \" \"] }  },\n    { dataElement: \"dummyID\", path: \"properties.s_tb2\", transform: { func: matchSplit, args: [\"s_cough_blood\", \" \"] } }\n  ];\n  return {\n    dataValues: dataElements.map(({ dataElement, path, transform }) => {\n      let value = safeGet(report, path);\n  \n      if (transform) {\n        if (typeof transform === \"function\") {\n          // Simple transform function\n          value = transform(value);\n        } else if (typeof transform === \"object\" && transform.func) {\n          // Transform function with additional arguments\n          const args = [value, ...(transform.args || [])];\n          value = transform.func.apply(null, args);\n        }\n      }\n  \n      return {\n        dataElement,\n        value,\n      };\n    })\n  };\n};\n\nfn((state) => {\n  const { report } = state.data;\n\n  state.dhis2Mapping = {\n    orgUnit: state.data.orgUnit,\n    occurredAt: state.data.reported_date,\n    program: \"wNRmGnc1t11\",\n    status: \"COMBLETED\",\n    ...mapReport(report)\n  };\n\n  console.log(state.dhis2Mapping);\n  return state;\n});",
+          "adaptor": "@openfn/language-common@latest",
+          "project_credential_id": null
+        }
+      },
+      "edges": {
+        "webhook->Mappings": {
+          "enabled": true,
+          "id": "de56cdaa-f0f9-4974-8011-508a876a289b",
+          "target_job_id": "09d87797-33a0-4f52-8237-7f47f8443851",
+          "source_trigger_id": "49215751-ed5c-4292-80ca-998912e72223",
+          "condition_type": "always"
+        }
+      }
+    },
+    "Old-CHT-DHIS2": {
+      "id": "6cdd641d-6087-414b-8193-d01d71d3240e",
+      "name": "Old-CHT-DHIS2",
+      "inserted_at": "2025-03-26T08:08:42.762901Z",
+      "lock_version": 59,
+      "triggers": {
+        "webhook": {
+          "enabled": false,
+          "id": "7bf6c1bc-f16f-40c0-89a5-184ae6ae742f",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "DHIS2-mapping": {
+          "id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
+          "name": "DHIS2 mapping",
+          "body": "//TODO: Remove this once we have orgUnit from report\n// const facilities = {\n//   \"712526f6-f826-45a7-a80b-6546ad9fde9d\": \"DiszpKrYNg8\", //corresponding_on_DHIS2,\n// };\n\nconst convertToBool = (val) => {\n  if (typeof val === 'boolean') return val;\n  if (typeof val === 'string') {\n    val = val.toLowerCase().trim();\n    return val === '1' || val === 'true' || val === 'yes';\n  }\n  return !!val;\n};\n\nconst safeGet = (obj, path, defaultValue = undefined) => {\n  return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;\n};\n\nconst genderMap = (value) => {\n  if (!value) return undefined;\n  return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';\n};\n\nconst convertToNumeric = (value) => {\n  if (typeof value === 'number') return value;\n  if (typeof value === 'string') {\n    const parsed = parseFloat(value);\n    return isNaN(parsed) ? undefined : parsed;\n  }\n  return undefined;\n};\n\nconst mapReport = (report) => {\n  const dataElements = [\n    // { dataElement: \"EuiLnVQP7fz\", path: 'fever_detected' },\n    // { dataElement: \"c7DB86yPCPw\", path: 'danger_signs' },\n    // { dataElement: \"pUQ3PxCLBGW\", path: 'symptoms_severity_level' },\n    // { dataElement: \"UkSorKPBQKp\", path: 'd_diarrhoea' },\n    { dataElement: \"mQfnNz6HAxg\", path: \"properties.d_disease_severe_malaria_possible\", transform: convertToBool },\n    { dataElement: \"rUiCXLuXe0D\", path: \"properties.p_id\" },\n    { dataElement: \"L9FyeXeKysL\", path: \"properties.p_gender\", transform: genderMap },\n    { dataElement: \"sRViHZrNOOi\", path: \"properties.p_age\" },\n    { dataElement: \"zWAPsDC96SK\", path: \"properties.p_weight\" },\n    { dataElement: \"nrsvTZKdAxD\", path: \"properties.p_temp\" },\n    { dataElement: \"f8AiyAoBmQZ\", path: \"properties.d_pneumonia\", transform: convertToBool },\n    { dataElement: \"nOqH46e5VmP\", path: \"properties.d_malaria\", transform: convertToBool },\n    { dataElement: \"S6XCvAD6uv6\", path: \"properties.d_scabies_infected\", transform: convertToBool },\n    { dataElement: \"Vg8aEzNouYb\", path: \"properties.d_measles\", transform: convertToBool },\n    { dataElement: \"Ofyvm4Ynqh7\", path: \"properties.ds_amoxicillin\", transform: convertToBool },\n    { dataElement: \"EijcDbR4oWL\", path: \"properties.ds_paracetamol\", transform: convertToNumeric },\n    { dataElement: \"DsiPa2sGoEe\", path: \"properties.ds_erythromycin\", transform: convertToNumeric },\n    { dataElement: \"xpWPRlZlN7b\", path: \"properties.d_deworming_needed\", transform: convertToBool },\n    { dataElement: \"tgUaWBaAIag\", path: \"properties.dur_amoxicillin\" },\n  ];\n\n  return {\n    dataValues: dataElements.map(({ dataElement, path, transform }) => ({\n      dataElement,\n      value: transform ? transform(safeGet(report, path)) : safeGet(report, path),\n    })),\n    notes: [{\n      value: safeGet(report, 'data.closed.doc.contact.notes'),\n      storedBy: safeGet(report, 'data.closed.doc.contact.name'),\n      storedDate: report.reported_date,\n    }],\n  };\n};\n\nfn((state) => {\n  const { report } = state.data;\n\n  state.dhis2Mapping = {\n  \n    orgUnit: \"DiszpKrYNg8\",\n    occurredAt: report.reported_date,\n    program: \"wNRmGnc1t11\",\n    status: \"COMPLETED\",\n    ...mapReport(report)\n  };\n\n  console.log(state.dhis2Mapping);\n  return state;\n});\n",
+          "adaptor": "@openfn/language-common@2.3.0",
+          "project_credential_id": null
+        },
+        "Create-Event-Program": {
+          "id": "5c26c910-7f0d-4cd7-8a71-22eba3d5db3c",
+          "name": "Create Event Program",
+          "body": "// Create events\ncreate(\"events\", $.dhis2Mapping);",
+          "adaptor": "@openfn/language-dhis2@6.1.0",
+          "project_credential_id": "752324bf-1765-4b45-8bdc-478317f8b362"
+        }
+      },
+      "edges": {
+        "webhook->DHIS2-mapping": {
+          "enabled": true,
+          "id": "a80a7125-32af-4159-8684-d014c07e6cfd",
+          "target_job_id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
+          "source_trigger_id": "7bf6c1bc-f16f-40c0-89a5-184ae6ae742f",
+          "condition_type": "always"
+        },
+        "DHIS2-mapping->Create-Event-Program": {
+          "enabled": true,
+          "id": "bc96b14e-af1e-48d8-884a-51d2fc018684",
+          "target_job_id": "5c26c910-7f0d-4cd7-8a71-22eba3d5db3c",
+          "source_job_id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
+          "condition_type": "on_job_success"
+        }
+      }
     }
-  }
+  },
+  "requires_mfa": false
 }
