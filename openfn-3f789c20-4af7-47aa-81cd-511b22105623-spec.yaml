@@ -425,8 +425,8 @@ workflows:
   KOBO-Mpesa:
     name: KOBO-Mpesa
     jobs:
-      New-job:
-        name: New job
+      Fetch-Submissions:
+        name: Fetch Submissions
         adaptor: '@openfn/language-kobotoolbox@latest'
         credential: null
         body: |
@@ -449,13 +449,13 @@ workflows:
         type: webhook
         enabled: false
     edges:
-      webhook->New-job:
+      webhook->Fetch-Submissions:
         source_trigger: webhook
-        target_job: New-job
+        target_job: Fetch-Submissions
         condition_type: always
         enabled: true
-      New-job->Mpesa-request:
-        source_job: New-job
+      Fetch-Submissions->Mpesa-request:
+        source_job: Fetch-Submissions
         target_job: Mpesa-request
         condition_type: on_job_success
         enabled: true

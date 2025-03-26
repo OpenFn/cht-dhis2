@@ -33,51 +33,6 @@
     }
   },
   "workflows": {
-    "KOBO-Mpesa": {
-      "id": "94d86f5b-12a1-4cd2-8948-9fe65da6b596",
-      "name": "KOBO-Mpesa",
-      "inserted_at": "2025-03-20T13:33:53.666607Z",
-      "lock_version": 2,
-      "triggers": {
-        "webhook": {
-          "enabled": false,
-          "id": "3b335c3a-cfb8-40d5-801b-856a297b000e",
-          "type": "webhook"
-        }
-      },
-      "jobs": {
-        "New-job": {
-          "id": "fbe27271-0b24-4a00-83b5-632666f297bd",
-          "name": "New job",
-          "body": "// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n\ngetSubmissions('aXecHjmbATuF6iGFmvBLBX', { query: { _submission_time:{ $gte: \"2022-06-12T21:54:20\" } } });",
-          "adaptor": "@openfn/language-kobotoolbox@latest",
-          "project_credential_id": null
-        },
-        "Mpesa-request": {
-          "id": "2ee4b011-1896-4cf5-87fe-cf3b9133e4c4",
-          "name": "Mpesa request",
-          "body": "get('https://catfact.ninja/fact', {\n  headers: {\n    'Accept': 'application/json'\n  }\n});",
-          "adaptor": "@openfn/language-http@latest",
-          "project_credential_id": null
-        }
-      },
-      "edges": {
-        "webhook->New-job": {
-          "enabled": true,
-          "id": "8723a8c4-d620-4538-8757-da4f89563520",
-          "target_job_id": "fbe27271-0b24-4a00-83b5-632666f297bd",
-          "source_trigger_id": "3b335c3a-cfb8-40d5-801b-856a297b000e",
-          "condition_type": "always"
-        },
-        "New-job->Mpesa-request": {
-          "enabled": true,
-          "id": "3fb5b99d-0c78-42bc-815e-3fcf35d7bc80",
-          "target_job_id": "2ee4b011-1896-4cf5-87fe-cf3b9133e4c4",
-          "source_job_id": "fbe27271-0b24-4a00-83b5-632666f297bd",
-          "condition_type": "on_job_success"
-        }
-      }
-    },
     "CHT-DHIS2": {
       "id": "a3b84c02-58f4-4ebe-bca4-13b42dc536c6",
       "name": "CHT-DHIS2",
@@ -210,6 +165,51 @@
           "id": "bc96b14e-af1e-48d8-884a-51d2fc018684",
           "target_job_id": "5c26c910-7f0d-4cd7-8a71-22eba3d5db3c",
           "source_job_id": "0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04",
+          "condition_type": "on_job_success"
+        }
+      }
+    },
+    "KOBO-Mpesa": {
+      "id": "94d86f5b-12a1-4cd2-8948-9fe65da6b596",
+      "name": "KOBO-Mpesa",
+      "inserted_at": "2025-03-26T08:10:59.248049Z",
+      "lock_version": 3,
+      "triggers": {
+        "webhook": {
+          "enabled": false,
+          "id": "3b335c3a-cfb8-40d5-801b-856a297b000e",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "Fetch-Submissions": {
+          "id": "fbe27271-0b24-4a00-83b5-632666f297bd",
+          "name": "Fetch Submissions",
+          "body": "// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n\ngetSubmissions('aXecHjmbATuF6iGFmvBLBX', { query: { _submission_time:{ $gte: \"2022-06-12T21:54:20\" } } });",
+          "adaptor": "@openfn/language-kobotoolbox@latest",
+          "project_credential_id": null
+        },
+        "Mpesa-request": {
+          "id": "2ee4b011-1896-4cf5-87fe-cf3b9133e4c4",
+          "name": "Mpesa request",
+          "body": "get('https://catfact.ninja/fact', {\n  headers: {\n    'Accept': 'application/json'\n  }\n});",
+          "adaptor": "@openfn/language-http@latest",
+          "project_credential_id": null
+        }
+      },
+      "edges": {
+        "webhook->Fetch-Submissions": {
+          "enabled": true,
+          "id": "8723a8c4-d620-4538-8757-da4f89563520",
+          "target_job_id": "fbe27271-0b24-4a00-83b5-632666f297bd",
+          "source_trigger_id": "3b335c3a-cfb8-40d5-801b-856a297b000e",
+          "condition_type": "always"
+        },
+        "Fetch-Submissions->Mpesa-request": {
+          "enabled": true,
+          "id": "3fb5b99d-0c78-42bc-815e-3fcf35d7bc80",
+          "target_job_id": "2ee4b011-1896-4cf5-87fe-cf3b9133e4c4",
+          "source_job_id": "fbe27271-0b24-4a00-83b5-632666f297bd",
           "condition_type": "on_job_success"
         }
       }
