@@ -124,7 +124,7 @@ workflows:
 
       Check-existing-events:
         name: Check existing events
-        adaptor: '@openfn/language-dhis2@latest'
+        adaptor: '@openfn/language-dhis2@6.3.1'
         credential: rkenyuri@icrc.org-DHIS2-PLAY-dev-2-40
         body: |
           get("events", {
@@ -148,7 +148,7 @@ workflows:
           // collections.set('run-logs', $.case_id, { 'cht-submission': $.data })
       Create-Event:
         name: Create Event
-        adaptor: '@openfn/language-dhis2@latest'
+        adaptor: '@openfn/language-dhis2@6.3.1'
         credential: rkenyuri@icrc.org-DHIS2-PLAY-dev-2-40
         body: |
           fn(state => {
@@ -173,7 +173,7 @@ workflows:
           })
 
 
-          collections.set('run-logs', `${$.case_id}-dhis2-response`, $.data)
+          collections.set('run-logs', i => `${i.case_id}-dhis2-response`, { case_id: $.case_id, ...$.data })
 
     triggers:
       webhook:
@@ -536,6 +536,43 @@ workflows:
         target_job: Create-Event-Program
         condition_type: on_job_success
         enabled: true
+  KOBO-Mpesa:
+    name: KOBO-Mpesa
+    jobs:
+      New-job:
+        name: New job
+        adaptor: '@openfn/language-kobotoolbox@latest'
+        credential: null
+        body: |
+          // Check out the Job Writing Guide for help getting started:
+          // https://docs.openfn.org/documentation/jobs/job-writing-guide
+
+          getSubmissions('aXecHjmbATuF6iGFmvBLBX', { query: { _submission_time:{ $gte: "2022-06-12T21:54:20" } } });
+      Mpesa-request:
+        name: Mpesa request
+        adaptor: '@openfn/language-http@latest'
+        credential: null
+        body: |
+          get('https://catfact.ninja/fact', {
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+    triggers:
+      webhook:
+        type: webhook
+        enabled: false
+    edges:
+      webhook->New-job:
+        source_trigger: webhook
+        target_job: New-job
+        condition_type: always
+        enabled: true
+      New-job->Mpesa-request:
+        source_job: New-job
+        target_job: Mpesa-request
+        condition_type: on_job_success
+        enabled: true
   Sample-Workflow:
     name: Sample Workflow
     jobs:
@@ -559,7 +596,7 @@ workflows:
 
       Load-to-DHIS2:
         name: Load to DHIS2
-        adaptor: '@openfn/language-dhis2@latest'
+        adaptor: '@openfn/language-dhis2@6.3.1'
         credential: mtuchi@openfn.org-DHIS2-Dev
         body: |
           

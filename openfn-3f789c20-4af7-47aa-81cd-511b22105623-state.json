@@ -32,67 +32,8 @@
       "name": "run-logs"
     }
   },
+  "requires_mfa": false,
   "workflows": {
-    "Sample-Workflow": {
-      "id": "c80ea84e-4a5b-44db-b863-9305d5e225e2",
-      "name": "Sample Workflow",
-      "inserted_at": "2024-12-01T19:03:34.011860Z",
-      "lock_version": 3,
-      "triggers": {
-        "cron": {
-          "enabled": true,
-          "id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
-          "type": "cron",
-          "cron_expression": "0 0 * * *"
-        }
-      },
-      "jobs": {
-        "Get-Patients": {
-          "id": "6c132952-404d-434b-8ee5-c161704c9f86",
-          "name": "Get Patients",
-          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
-          "adaptor": "@openfn/language-cht@latest",
-          "project_credential_id": null
-        },
-        "Transform-and-map-patients": {
-          "id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
-          "name": "Transform and map patients",
-          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
-          "adaptor": "@openfn/language-common@latest",
-          "project_credential_id": null
-        },
-        "Load-to-DHIS2": {
-          "id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7",
-          "name": "Load to DHIS2",
-          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
-          "adaptor": "@openfn/language-dhis2@latest",
-          "project_credential_id": "929e63c8-77d0-4859-85d0-e138fabbb963"
-        }
-      },
-      "edges": {
-        "cron->Get-Patients": {
-          "enabled": true,
-          "id": "3c0a1c52-1f6b-4210-8ead-7d50cea97428",
-          "target_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
-          "source_trigger_id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
-          "condition_type": "always"
-        },
-        "Get-Patients->Transform-and-map-patients": {
-          "enabled": true,
-          "id": "038b5924-a4b4-4434-8f85-d4101aa3da61",
-          "target_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
-          "source_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
-          "condition_type": "on_job_success"
-        },
-        "Transform-and-map-patients->Load-to-DHIS2": {
-          "enabled": true,
-          "id": "818f484f-b685-4352-8553-93514b4df739",
-          "target_job_id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7",
-          "source_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
-          "condition_type": "on_job_success"
-        }
-      }
-    },
     "CHT-matchsplit-Webhook": {
       "id": "5f295a1b-8b13-4fe8-a80a-cd539a476995",
       "name": "CHT matchsplit Webhook",
@@ -169,11 +110,116 @@
         }
       }
     },
+    "KOBO-Mpesa": {
+      "id": "94d86f5b-12a1-4cd2-8948-9fe65da6b596",
+      "name": "KOBO-Mpesa",
+      "inserted_at": "2025-03-20T13:33:53.666607Z",
+      "lock_version": 2,
+      "triggers": {
+        "webhook": {
+          "enabled": false,
+          "id": "3b335c3a-cfb8-40d5-801b-856a297b000e",
+          "type": "webhook"
+        }
+      },
+      "jobs": {
+        "New-job": {
+          "id": "fbe27271-0b24-4a00-83b5-632666f297bd",
+          "name": "New job",
+          "body": "// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n\ngetSubmissions('aXecHjmbATuF6iGFmvBLBX', { query: { _submission_time:{ $gte: \"2022-06-12T21:54:20\" } } });",
+          "adaptor": "@openfn/language-kobotoolbox@latest",
+          "project_credential_id": null
+        },
+        "Mpesa-request": {
+          "id": "2ee4b011-1896-4cf5-87fe-cf3b9133e4c4",
+          "name": "Mpesa request",
+          "body": "get('https://catfact.ninja/fact', {\n  headers: {\n    'Accept': 'application/json'\n  }\n});",
+          "adaptor": "@openfn/language-http@latest",
+          "project_credential_id": null
+        }
+      },
+      "edges": {
+        "webhook->New-job": {
+          "enabled": true,
+          "id": "8723a8c4-d620-4538-8757-da4f89563520",
+          "target_job_id": "fbe27271-0b24-4a00-83b5-632666f297bd",
+          "source_trigger_id": "3b335c3a-cfb8-40d5-801b-856a297b000e",
+          "condition_type": "always"
+        },
+        "New-job->Mpesa-request": {
+          "enabled": true,
+          "id": "3fb5b99d-0c78-42bc-815e-3fcf35d7bc80",
+          "target_job_id": "2ee4b011-1896-4cf5-87fe-cf3b9133e4c4",
+          "source_job_id": "fbe27271-0b24-4a00-83b5-632666f297bd",
+          "condition_type": "on_job_success"
+        }
+      }
+    },
+    "Sample-Workflow": {
+      "id": "c80ea84e-4a5b-44db-b863-9305d5e225e2",
+      "name": "Sample Workflow",
+      "inserted_at": "2025-03-20T16:29:43.429814Z",
+      "lock_version": 4,
+      "triggers": {
+        "cron": {
+          "enabled": true,
+          "id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
+          "type": "cron",
+          "cron_expression": "0 0 * * *"
+        }
+      },
+      "jobs": {
+        "Get-Patients": {
+          "id": "6c132952-404d-434b-8ee5-c161704c9f86",
+          "name": "Get Patients",
+          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
+          "adaptor": "@openfn/language-cht@latest",
+          "project_credential_id": null
+        },
+        "Transform-and-map-patients": {
+          "id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
+          "name": "Transform and map patients",
+          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
+          "adaptor": "@openfn/language-common@latest",
+          "project_credential_id": null
+        },
+        "Load-to-DHIS2": {
+          "id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7",
+          "name": "Load to DHIS2",
+          "body": "\n// Check out the Job Writing Guide for help getting started:\n// https://docs.openfn.org/documentation/jobs/job-writing-guide\n",
+          "adaptor": "@openfn/language-dhis2@6.3.1",
+          "project_credential_id": "929e63c8-77d0-4859-85d0-e138fabbb963"
+        }
+      },
+      "edges": {
+        "cron->Get-Patients": {
+          "enabled": true,
+          "id": "3c0a1c52-1f6b-4210-8ead-7d50cea97428",
+          "target_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
+          "source_trigger_id": "5257dc8b-f1c8-4073-8772-2a23958d1b01",
+          "condition_type": "always"
+        },
+        "Get-Patients->Transform-and-map-patients": {
+          "enabled": true,
+          "id": "038b5924-a4b4-4434-8f85-d4101aa3da61",
+          "target_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
+          "source_job_id": "6c132952-404d-434b-8ee5-c161704c9f86",
+          "condition_type": "on_job_success"
+        },
+        "Transform-and-map-patients->Load-to-DHIS2": {
+          "enabled": true,
+          "id": "818f484f-b685-4352-8553-93514b4df739",
+          "target_job_id": "9af97a93-22c5-4bf4-8f69-86ac2d6e6af7",
+          "source_job_id": "02495f58-cb2c-4b0e-8cf7-d41293455ee0",
+          "condition_type": "on_job_success"
+        }
+      }
+    },
     "CHT-DHIS2": {
       "id": "a3b84c02-58f4-4ebe-bca4-13b42dc536c6",
       "name": "CHT-DHIS2",
-      "inserted_at": "2025-03-17T13:12:24.081383Z",
-      "lock_version": 38,
+      "inserted_at": "2025-03-20T16:29:43.863255Z",
+      "lock_version": 41,
       "triggers": {
         "webhook": {
           "enabled": true,
@@ -193,14 +239,14 @@
           "id": "77328d2e-4b86-4e4b-8fbd-0f96c5f1fa92",
           "name": "Check existing events",
           "body": "get(\"events\", {\n  orgUnit: state.orgUnit,\n  program: \"GaOaL76FraA\",\n  filter: `IsrhSrEFAX8:EQ:${state.case_id}`,\n});\n\nfn(state => {\n  const events = state.data.events || [];\n  if (events.length > 0) {\n    console.log(\"Existing event found. Will update.\");\n    state.existingEvent = events[0];\n  } else {\n    console.log(\"No existing event found. Proceeding with create.\");\n    state.existingEvent = null;\n  }\n  return state;\n});\n\n// collections.set('run-logs', $.case_id, { 'cht-submission': $.data })",
-          "adaptor": "@openfn/language-dhis2@latest",
+          "adaptor": "@openfn/language-dhis2@6.3.1",
           "project_credential_id": "56030854-1daf-4a28-aa09-7beb0140c9d9"
         },
         "Create-Event": {
           "id": "fce084cf-a844-4ff8-8aae-204efac1ce0f",
           "name": "Create Event",
-          "body": "fn(state => {\n  if (state.existingEvent) {\n    // Set the event ID so that DHIS2 updates the event\n    state.preparedEvent.event = state.existingEvent.event;\n  }\n  return state;\n});\n\ncreate('events', $.preparedEvent, {\n  params: {\n    importStrategy: 'CREATE_AND_UPDATE',\n    atomicMode: 'OBJECT',\n    async: false  // Prefer boolean false here\n  }\n});\n\nfn(state => {\n  state.eventId = state.data.bundleReport.typeReportMap.EVENT?.objectReports[0].uid\n  return state\n})\n\n\ncollections.set('run-logs', `${$.case_id}-dhis2-response`, $.data)\n",
-          "adaptor": "@openfn/language-dhis2@latest",
+          "body": "fn(state => {\n  if (state.existingEvent) {\n    // Set the event ID so that DHIS2 updates the event\n    state.preparedEvent.event = state.existingEvent.event;\n  }\n  return state;\n});\n\ncreate('events', $.preparedEvent, {\n  params: {\n    importStrategy: 'CREATE_AND_UPDATE',\n    atomicMode: 'OBJECT',\n    async: false  // Prefer boolean false here\n  }\n});\n\nfn(state => {\n  state.eventId = state.data.bundleReport.typeReportMap.EVENT?.objectReports[0].uid\n  return state\n})\n\n\ncollections.set('run-logs', i => `${i.case_id}-dhis2-response`, { case_id: $.case_id, ...$.data })\n",
+          "adaptor": "@openfn/language-dhis2@6.3.1",
           "project_credential_id": "56030854-1daf-4a28-aa09-7beb0140c9d9"
         }
       },
@@ -229,6 +275,5 @@
         }
       }
     }
-  },
-  "requires_mfa": false
+  }
 }
