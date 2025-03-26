@@ -1,0 +1,38 @@
+{
+    "data": {
+        "case_id": "dd3572eeed5f16e16dcfecaba70a7eac",
+        "orgUnit": "DiszpKrYNg8",
+        "properties": {
+            "ALM_B23_DE01": 0,
+            "CHE_B10S1_DE05A": "",
+            "CHE_B23_DE03": "{{b23_de03}}",
+            "CHE_B23_DE100": "0",
+            "CHE_B23_DE17": "0",
+            "CHE_B23_DE19": "{{b23_de19}}",
+            "CHE_B23_DE20": "{{b23_de20}}",
+            "CHE_B23_DE32": "0",
+            "CHE_B23_DE35": "0",
+            "CHE_B23_DE58": "0",
+            "CHE_B23_DE66": "0",
+            "CHE_B23_DE70": "0",
+            "CHE_B23_DE71": "0",
+            "CHE_B23_DE81": "1",
+            "CHE_B23_DE85": "1",
+            "CHE_B23_DE86": "1",
+            "CHE_B23_DE88": "1",
+            "CHE_B23_DE90": "1",
+            "CHE_B23_DE91": "1",
+            "CHE_B23_DE92": "1",
+            "CHE_B3_DE06": "CHE.B3.DE07",
+            "age_01day": 0,
+            "age_0_2months": 0,
+            "age_0_45days": 0,
+            "age_2_59months": 0,
+            "owner_id": {
+                "location_uuid": "0276940d-6086-4743-aea9-d962f697797c"
+            },
+            "urgent_referral": "{{referral}}"
+        },
+        "reported_date": 1742972579512
+    }
+}
