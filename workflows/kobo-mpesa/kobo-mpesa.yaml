@@ -1,0 +1,24 @@
+id: kobo-mpesa
+name: KOBO-Mpesa
+start: webhook
+steps:
+  - id: fetch-submissions
+    name: Fetch Submissions
+    adaptor: '@openfn/language-kobotoolbox@latest'
+    expression: ./fetch-submissions.js
+    next:
+      mpesa-request:
+        disabled: false
+        condition: on_job_success
+  - id: mpesa-request
+    name: Mpesa request
+    adaptor: '@openfn/language-http@latest'
+    expression: ./mpesa-request.js
+  - id: webhook
+    type: webhook
+    enabled: false
+    webhook_reply: before_start
+    next:
+      fetch-submissions:
+        disabled: false
+        condition: always

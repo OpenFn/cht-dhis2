@@ -1,0 +1,16 @@
+id: cht-matchsplit-mapping
+name: CHT-MatchSplit-Mapping
+start: webhook
+steps:
+  - id: mappings
+    name: Mappings
+    adaptor: '@openfn/language-common@latest'
+    expression: ./mappings.js
+  - id: webhook
+    type: webhook
+    enabled: false
+    webhook_reply: before_start
+    next:
+      mappings:
+        disabled: false
+        condition: always

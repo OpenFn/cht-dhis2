@@ -1,3 +1,23 @@
 project:
   uuid: 3f789c20-4af7-47aa-81cd-511b22105623
   endpoint: https://app.openfn.org
+  inserted_at: 2024-11-07T11:32:07Z
+  updated_at: 2026-03-07T11:34:32Z
+  id: cht-sandbox
+  name: cht-sandbox
+  forked_from:
+    old-cht-dhis2: app:abc3b95f887a
+    cht-matchsplit-mapping: app:cb2e88221d90
+    cht-dhis2: app:a65510d52d16
+    kobo-mpesa: app:6f7eb78110b3
+  collections:
+    - run-logs
+workspace:
+  credentials: credentials.yaml
+  dirs:
+    projects: .projects
+    workflows: workflows
+  formats:
+    openfn: yaml
+    project: yaml
+    workflow: yaml

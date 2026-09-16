@@ -1,0 +1,1019 @@
+id: cht-sandbox
+name: cht-sandbox
+schema_version: '4.0'
+collections:
+  - uuid: f23af38b-2fd5-4c57-8a15-ebaf58f5715a
+    name: run-logs
+channels: []
+credentials:
+  - uuid: 929e63c8-77d0-4859-85d0-e138fabbb963
+    name: DHIS2 Dev
+    owner: mtuchi@openfn.org
+  - uuid: 752324bf-1765-4b45-8bdc-478317f8b362
+    name: DHIS2 2-40-7
+    owner: mtuchi@openfn.org
+  - uuid: 56030854-1daf-4a28-aa09-7beb0140c9d9
+    name: DHIS2 PLAY dev 2-40
+    owner: rkenyuri@icrc.org
+openfn:
+  uuid: 3f789c20-4af7-47aa-81cd-511b22105623
+  endpoint: https://app.openfn.org
+  inserted_at: 2024-11-07T11:32:07Z
+  updated_at: 2026-03-07T11:34:32Z
+options:
+  env: main
+  history_retention_period: 365
+  dataclip_retention_period: 365
+  retention_policy: retain_all
+  allow_support_access: false
+  requires_mfa: false
+workflows:
+  - name: Old-CHT-DHIS2
+    steps:
+      - id: check-if-event-exist
+        name: Check if event exist
+        expression: |
+          import { get } from '@openfn/language-dhis2';
+
+          export default [
+            get(
+              'events',
+              {
+                orgUnit:      state.orgUnit,
+                program:      state.localconfig.programId,
+                programStage: state.localconfig.programStage,
+                filter:       state.filter
+              }
+            ),
+
+            fn(state => {
+              const events = state.data.events || [];
+              if (events.length > 0) {
+                const uid = events[0].event;
+                console.log(`Existing event found (ID = ${uid}). Will update.`);
+                state.existingEventId = uid;
+              } else {
+                console.log('No existing event found. Proceeding with create.');
+                state.existingEventId = null;
+              }
+              return state;
+            })
+          ];
+        adaptor: '@openfn/language-dhis2@8.0.3'
+        openfn:
+          uuid: 72783d24-dc0f-4f77-8aa7-02c1a99ab050
+        configuration: rkenyuri@icrc.org|DHIS2 PLAY dev 2-40
+        next:
+          create-or-update-event-program:
+            disabled: false
+            condition: on_job_success
+            openfn:
+              uuid: 6ebf458c-50e7-48e8-8742-198bfc86f3e3
+      - id: configure-program
+        name: Configure Program
+        expression: >-
+          fn(state => {
+            state.localconfig = {
+              programId: "GaOaL76FraA",
+              caseId: "IsrhSrEFAX8",
+              programStage: "otnWqv9MAzn"
+            };
+
+            state.filter = `${state.localconfig.caseId}:EQ:${state.case_id}`;
+            console.log(state.filter);
+
+            // Normalize age if present
+            if ('age_in_months' in state.properties) {
+              const rawAge = parseFloat(state.properties.age_in_months);
+
+              // Check for NaN and ensure it's a valid number >= 0
+              if (!isNaN(rawAge) && rawAge >= 0) {
+                // DHIS2 INTEGER_POSITIVE means ≥1, so enforce minimum of 1
+                const age = Math.floor(rawAge);
+                state.properties.age_in_months = age >= 1 ? age : 1;
+              } else {
+                console.warn('⚠️ Invalid age_in_months value:', state.properties.age_in_months);
+                delete state.properties.age_in_months; // or set to null if you prefer
+              }
+            }
+
+            state.mappingsList = [
+              { code: "final_CHE_B23_DE40", dhis2_uid: "LKyvrAiGjKV", datatype: "BOOLEAN" },
+              { code: "ALM_B23_DE15", dhis2_uid: "bQWZtGOdn6z", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE13", dhis2_uid: "edsDrLAzx95", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE61", dhis2_uid: "ubJFipVoMl2", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE14", dhis2_uid: "SX3UyVIhAZP", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE57", dhis2_uid: "r0148Uo26Yi", datatype: "BOOLEAN" },
+              { code: "CHE_B12S1_DE06", dhis2_uid: "uxQTzY7v7Nq", datatype: "BOOLEAN" },
+              { code: "CHE.B11S1.DE01", dhis2_uid: "y3tCy143gP5", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE70", dhis2_uid: "wvIZHqXsAFX", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE40", dhis2_uid: "UBDoldBMVye", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE68", dhis2_uid: "ySqC9RnGQxD", datatype: "BOOLEAN" },
+              { code: "CHE_B7_DE02", dhis2_uid: "rcK4Td65GK7", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE10", dhis2_uid: "mTrykBBMfJL", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE65", dhis2_uid: "Th4EvYXGSwl", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE34", dhis2_uid: "oGI31eqZSco", datatype: "BOOLEAN" },
+              { code: "age_in_days", dhis2_uid: "SfLueMvecnc", datatype: "INTEGER_ZERO_OR_POSITIVE" },
+              { code: "age_in_months", dhis2_uid: "wiiDcsQ5pdQ", datatype: "INTEGER_POSITIVE" },
+              { code: "final_CHE_B23_DE66", dhis2_uid: "xOTL8X1B2NI", datatype: "BOOLEAN" },
+              { code: "case_id", dhis2_uid: "IsrhSrEFAX8", datatype: "TEXT" },
+              { code: "final_CHE_B23_DE42", dhis2_uid: "ecFkzcELtvw", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE48", dhis2_uid: "gtjeeziwAN1", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE16", dhis2_uid: "v0zEE7m2SnT", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE35", dhis2_uid: "Dv5Q4FmyvyM", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE56", dhis2_uid: "BEX4UOGrYOJ", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE38", dhis2_uid: "logvGxVToum", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE31", dhis2_uid: "qGDJu8GwiT1", datatype: "BOOLEAN" },
+              { code: "CHE_B14S2_DE34", dhis2_uid: "vc4yEOMV5XY", datatype: "BOOLEAN" },
+              { code: "CHE_B14S2_DE20", dhis2_uid: "o4Y9Ve0hL61", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE80", dhis2_uid: "tzg1Y4NgewA", datatype: "BOOLEAN" },
+              { code: "needs_test", dhis2_uid: "Uso4Gnn7wpN", datatype: "BOOLEAN" },
+              { code: "CHE_B10S1_DE06", dhis2_uid: "ptHiIxoWT2j", datatype: "BOOLEAN", option: "CHE.B10S1.DE08" },
+              { code: "final_CHE_B23_DE10", dhis2_uid: "RFMdp6UZuNP", datatype: "BOOLEAN" },
+              { code: "CHE_B27_G_DE01", dhis2_uid: "DAdX9ycqHrm", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE55", dhis2_uid: "ZM3lMcNxf5a", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE64", dhis2_uid: "JmpN6Dnfik8", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE44", dhis2_uid: "iYTiSNfGH8t", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE47", dhis2_uid: "dja6mCss9o5", datatype: "BOOLEAN" },
+              { code: "CHE.B11S1.DE01", dhis2_uid: "lrcwtaAnbi8", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE45", dhis2_uid: "iYUhvrRnJdu", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE45", dhis2_uid: "v1OnAv6a6GF", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE32", dhis2_uid: "kATEiT6rXkJ", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE15", dhis2_uid: "Deqqd8R3nlb", datatype: "BOOLEAN" },
+              { code: "CHE_B11S1_DE02", dhis2_uid: "nspzFe4axmI", datatype: "BOOLEAN", option: "CHE_B11S1_DE04" },
+              { code: "CHE_B10S1_DE01", dhis2_uid: "bnsS26hfyoh", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE17", dhis2_uid: "Gcua1eaZ5eC", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE18", dhis2_uid: "ly5sMjri6n7", datatype: "BOOLEAN" },
+              { code: "CHE_B13S1_DE03", dhis2_uid: "EHgO0awHKbi", datatype: "BOOLEAN" },
+              { code: "CHE_B13S1_DE05", dhis2_uid: "rdE7R8MWJsg", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE30", dhis2_uid: "ftxiAWBUm8c", datatype: "BOOLEAN" },
+              { code: "CHE_B13S1_DE06", dhis2_uid: "jNsPe6yzhCQ", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE62", dhis2_uid: "sXkhG7ZMvjP", datatype: "BOOLEAN" },
+              { code: "CHE_B13S1_DE02", dhis2_uid: "HOfe9Ms2IDM", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE33", dhis2_uid: "x0SXj91wkBn", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE60", dhis2_uid: "VjjHNHKBiBe", datatype: "BOOLEAN" },
+              { code: "CHE_B23_DE52", dhis2_uid: "VSisNsqc4OU", datatype: "BOOLEAN" },
+              { code: "CHE_B23_DE37", dhis2_uid: "DIzMx85EYgE", datatype: "BOOLEAN" },
+              { code: "CHE_B23_DE19", dhis2_uid: "OMA0OA30Ru3", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE98", dhis2_uid: "jpuL5Ovyl2a", datatype: "BOOLEAN" },
+              { code: "CHE_B12S1_DE03", dhis2_uid: "ihOqqg5dDPF", datatype: "BOOLEAN", option: "CHE_B12S1_DE04" },
+              { code: "CHE_B12S1_DE03", dhis2_uid: "ysNDpMshWu2", datatype: "BOOLEAN", option: "CHE_B12S1_DE05" },
+              { code: "CHE_B24_G_DE44", dhis2_uid: "JprlrJGhe6N", datatype: "BOOLEAN", option: "CHE.B24.G.DE47" },
+              { code: "CHE_B23_DE59", dhis2_uid: "i9KJ02MRiuE", datatype: "BOOLEAN" },
+              { code: "CHE_B6_DE10", dhis2_uid: "gY6pXRwdThm", datatype: "NUMBER" },
+              { code: "final_CHE_B23_DE50", dhis2_uid: "XMcaHg9Ies9", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE02 | final_CHE_B23_DE02A | final_CHE_B23_DE85 | final_CHE_B23_DE85B", dhis2_uid: "PwUUC18At3K", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE81", dhis2_uid: "jJPlVaVeleR", datatype: "BOOLEAN" },
+              { code: "CHE_B14S2_DE11", dhis2_uid: "B45VEPEvyR1", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE52", dhis2_uid: "G1xXtYgeuXN", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE60", dhis2_uid: "jt2BpRfHp7q", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE47", dhis2_uid: "VdWxQ7YgFTF", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE89", dhis2_uid: "ONz7NNrrvnG", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE91", dhis2_uid: "O7nmBEUP8Se", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE88", dhis2_uid: "gdr30afwBpC", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE71", dhis2_uid: "sI5nJKbDXxk", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE83", dhis2_uid: "UonXPDOdZf8", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE92", dhis2_uid: "Km9BtfBd3M7", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE20", dhis2_uid: "Y64yUy6zBEp", datatype: "BOOLEAN" },
+              { code: "CHE_B6_DE19", dhis2_uid: "hs3Wugcy4mt", datatype: "TEXT" },
+              { code: "CHE_B17_DE11", dhis2_uid: "XZndbQxziZO", datatype: "BOOLEAN", option: "CHE.B17.DE14" },
+              { code: "CHE_B23_DE36", dhis2_uid: "s0XGHZwjuJg", datatype: "BOOLEAN" },
+              { code: "CHE_B23_DE72", dhis2_uid: "BExzTTmDhvO", datatype: "BOOLEAN" },
+              { code: "CHE_B17_DE01", dhis2_uid: "tqw5aWxCR1x", datatype: "BOOLEAN", option: "CHE.B17.DE04" },
+              { code: "CHE_B16S2_DE01", dhis2_uid: "mxNluxv7LWg", datatype: "BOOLEAN" },
+              { code: "CHE_B12S1_DE11", dhis2_uid: "BANh6Or7fvh", datatype: "BOOLEAN" },
+              { code: "CHE_B12S2_DE05", dhis2_uid: "gWwh7HdDLvN", datatype: "BOOLEAN" },
+              { code: "CHE_B3_DE06", dhis2_uid: "m5OehFImiIJ", datatype: "TEXT" },
+              { code: "che_referral", dhis2_uid: "eE4UpNHJQMY", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE78", dhis2_uid: "zDEeWCdlV9r", datatype: "BOOLEAN" },
+              { code: "ask_pause_test | Needs test", dhis2_uid: "pBELKomJbHO", datatype: "BOOLEAN" },
+              { code: "p_sex", dhis2_uid: "RsZ4gQzWPWU", datatype: "TEXT" },
+              { code: "CHE_B10S2_DE03", dhis2_uid: "RW8z4lJDa5E", datatype: "BOOLEAN" },
+              { code: "CHE_B10S2_DE06", dhis2_uid: "vMj9NZYibkx", datatype: "BOOLEAN" },
+              { code: "CHE_B10S2_DE06", dhis2_uid: "y4jM0oVVPEU", datatype: "BOOLEAN" },
+              { code: "CHE_B10S2_DE05", dhis2_uid: "AupNCEGaCPe", datatype: "BOOLEAN" },
+              { code: "CHE_B10S2_DE04", dhis2_uid: "WNGCQNAqy9z", datatype: "BOOLEAN" },
+              { code: "ALM_B24_DE01", dhis2_uid: "yOpI9ukAbz3", datatype: "BOOLEAN" },
+              { code: "ask_vacci_card_available", dhis2_uid: "n0oh8R3odX2", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE24", dhis2_uid: "gvdjpgHqs4z", datatype: "BOOLEAN" },
+              { code: "ask_vacci_missing_dose", dhis2_uid: "ZNGQ2uyeoh9", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE01", dhis2_uid: "FzPX1C9YHk9", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE19", dhis2_uid: "Y7RtctxKULG", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE25", dhis2_uid: "sACrnP32WsH", datatype: "BOOLEAN" },
+              { code: "test_malaria", dhis2_uid: "cPWFbLyuPQ8", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE20", dhis2_uid: "E3HpTJ4lmkt", datatype: "BOOLEAN" },
+              { code: "CHE_B24_G_DE44", dhis2_uid: "dxfsAbxfeUo", datatype: "TEXT" },
+              { code: "CHE_outcome_outcome", dhis2_uid: "G5yiBUphdZd", datatype: "TEXT" },
+              { code: "CHE_outcome_medications", dhis2_uid: "SQPjMbdOsyv", datatype: "TEXT" },
+              { code: "test_urine", dhis2_uid: "V4m1iJnP4YJ", datatype: "BOOLEAN" },
+              { code: "ask_vacci_missing_dose", dhis2_uid: "ZNGQ2uyeoh9", datatype: "BOOLEAN" },
+              { code: "CHE_B14S2_DE27", dhis2_uid: "AgOM6kruN1l", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE06", dhis2_uid: "jmaPh46qxZL", datatype: "BOOLEAN" },
+              { code: "CHE_B23_DE09", dhis2_uid: "TjoAB8zJpcA", datatype: "BOOLEAN" },
+              { code: "final_CHE_B23_DE03", dhis2_uid: "WjNYqG8zi5V", datatype: "BOOLEAN" },
+              { code: "CHE_outcome_medications", option: "ALM.outcome.antibiotics", dhis2_uid: "vxr97FUecP5", datatype: "BOOLEAN" },
+              { code: "CHE_outcome_medications", option: "ALM.outcome.antimalarials", dhis2_uid: "inqgUs2Qtoe", datatype: "BOOLEAN" },
+              { code: "CHE_outcome_medications", option: "ALM.outcome.vitamins", dhis2_uid: "zlpC9uaegas", datatype: "BOOLEAN" },
+              { code: "CHE_outcome_medications", option: "ALM.outcome.deworming", dhis2_uid: "IvZyMzjuRes", datatype: "BOOLEAN" },
+              { code: "CHE_B6_DE07", dhis2_uid: "L7aO70bcrbP", datatype: "NUMBER" },
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-1", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Pneumonia
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-2", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Persistent diarrhoea
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-3", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Dysentery
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-4", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Malaria
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-5", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Fever: No Malaria
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-6", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Measles with eye or mouth complications, gum or mouth ulcers, or thrush
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-7", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Ear infection
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-8", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Feeding problem
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-9", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Anaemia
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-10", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Uncomplicated Severe Acute Malnutrition
+              { code: "CHE_B18S1_DE02_FU", option: "CHE.B18S1.DE02-11", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Moderate Acute Malnutrition
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-1", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Pneumonia or severe pneumonia
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-2", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Local bacterial infection
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-3", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Jaundice
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-4", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Diarrhoea
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-5", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Feeding problem: breastfed infant
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-6", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Feeding problem: non-breastfed infant
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-7", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Low weight for age: breastfed infant
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-8", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Low weight for age: non-breastfed infant
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-9", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Thrush: breastfed infant
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-10", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Thrush: non-breastfed infant
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-11", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" },//Critical illness when referral was refused or not feasible
+              { code: "CHE_B18S1_DE02YI", option: "CHE.B18S1.DE02YI-12", dhis2_uid: "nql64ALnLEI", datatype: "TEXT" }//Clinical severe infection when referral was refused or not feasible
+            ];
+
+            return state;
+          });
+
+
+          fn(state => {
+            // Convert sex code to 'm' or 'f' before processing
+            if (state.properties && state.properties.p_sex) {
+              if (state.properties.p_sex === "CHE.A.DE18") {
+                state.properties.p_sex = "m";
+              } else if (state.properties.p_sex === "CHE.A.DE17") {
+                state.properties.p_sex = "f";
+              }
+            }
+
+
+
+            const converter = (value, datatype) => {
+              if (datatype === "BOOLEAN") {
+                if (value === 1 || value === '1' || value === true) return true;
+                if (value === 0 || value === '0' || value === -1 || value === '-1' || value === false) return false;
+                return value;
+              }
+              if (datatype === "NUMBER") {
+                const num = parseFloat(value);
+                return isNaN(num) ? value : num;
+              }
+              return value;
+            };
+
+            const dv = (dataElement, value) => {
+              if (value !== undefined && value !== null) {
+                return { dataElement, value };
+              }
+            };
+
+            const match = (mapping) => {
+              const { dhis2_uid, code, option, datatype } = mapping;
+              const props = state.properties || {};
+
+              if (datatype === "BOOLEAN" && option) {
+                const value = props[code];
+                if (typeof value === "string") {
+                  const selectedOptions = value.split(" ");
+                  return dv(dhis2_uid, selectedOptions.includes(option));
+                }
+              } else if (datatype === "OPTIONS") {
+                if (code in props) {
+                  const value = props[code];
+                  const validOption = state.mappingsList.find(m => m.code === value && m.datatype === "TEXT");
+                  if (validOption) {
+                    return dv(dhis2_uid, validOption.dhis2_uid);
+                  }
+                }
+              } else {
+                if (code in props) {
+                  return dv(dhis2_uid, converter(props[code], datatype));
+                }
+              }
+            };
+
+            let dataValues = state.mappingsList
+              .map(match)
+              .filter(n => n);
+
+            dataValues.push(dv(state.localconfig.caseId, state.case_id));
+
+            //CHE_outcome_outcome - Referral
+            if (state.properties?.CHE_outcome_outcome) {
+              const v = state.properties.CHE_outcome_outcome;
+
+              if (
+                typeof v === "string" &&
+                (v.includes("ALM.outcome.referral_inpatient") ||
+                  v.includes("ALM.outcome.referral_outpatient"))
+              ) {
+                dataValues.push({ dataElement: "MNPc48EAQ7X", value: true }); // string
+              }
+              else if (typeof v === "string" && v.includes("ALM.outcome.referral_refused")) {
+                dataValues.push({ dataElement: "MNPc48EAQ7X", value: false });
+              }
+            }
+
+            //ALM_B24_G_DE01 - Urine dipstick
+            if (state.properties?.ALM_B24_G_DE01) {
+              const v = state.properties.ALM_B24_G_DE01;
+
+              if (
+                typeof v === "string" &&
+                (
+                  v.includes("ALM.B24.G.DE02") ||
+                  v.includes("ALM.B24.G.DE03") ||
+                  v.includes("ALM.B24.G.DE04")
+                )
+              ) {
+                dataValues.push({ dataElement: "niCoT7i0XtP", value: true }); // string
+              }
+              else if (typeof v === "string" && v.includes("opt_none")) {
+                dataValues.push({ dataElement: "niCoT7i0XtP", value: false });
+              }
+            }
+
+            // NEW: write fhLZxgFDp2V when both flags are "1"
+            /* if (
+               state.properties?.ask_lp_jcJw1ZY_7aaFDzeRA_0 === "1" &&
+               state.properties?.final_CHE_B23_DE13 === "1"
+             ) {
+               dataValues.push({ dataElement: "fhLZxgFDp2V", value: true });
+             }
+           
+             if (
+               state.properties["final_CHE_B23_DE19"] === "1" &&
+               state.properties["CHE_B24_G_DE44"] === "CHE.B24.G.DE45"
+             ) {
+               dataValues.push({ dataElement: "djiymxi9T9m", value: true });
+             }
+             */
+
+            dataValues.push({
+              dataElement: "fhLZxgFDp2V",
+              value:
+                state.properties?.ask_lp_jcJw1ZY_7aaFDzeRA_0 === "1" &&
+                state.properties?.final_CHE_B23_DE13 === "1"
+            });
+
+            /*
+              if (
+                state.properties["ask_lp_jcJw1ZY_7aaFDzeRA_0"] === "1" &&
+                state.properties["final_CHE_B23_DE13"] === "1"
+              ) {
+                dataValues.push({ dataElement: "fhLZxgFDp2V", value: true });
+              }
+            */
+
+
+            const eDate = new Date(state.reported_date).toISOString().split('T')[0];
+
+            state.event = {
+              orgUnit: state.orgUnit,
+              program: state.localconfig.programId,
+              programStage: state.localconfig.programStage,
+              eventDate: eDate,
+              occurredAt: eDate,
+              status: "COMPLETED",
+              storedBy: "mediator",
+              dataValues: dataValues
+            };
+
+            return state;
+          });
+        adaptor: '@openfn/language-common@latest'
+        openfn:
+          uuid: c1bb0e2f-0e8d-4583-8d32-351e0434eb88
+        next:
+          check-if-event-exist:
+            disabled: false
+            condition: on_job_success
+            openfn:
+              uuid: 8f0524d3-5f68-49cb-8367-dca7bd75dc9d
+      - id: create-or-update-event-program
+        name: Create or update event program
+        expression: |
+          import { upsert } from '@openfn/language-dhis2';
+          //import { fn     } from '@openfn/language-common';
+
+          export default [
+             fn(state => {
+              const payload = { ...state.event };
+              if (state.existingEventId) {
+                payload.event = state.existingEventId;
+                console.log(`Updating existing event ${state.existingEventId}`);
+              } else {
+                console.log('No existing event — will CREATE a new one');
+              }
+              state.preparedEvent = payload;
+              return state;
+            }),
+
+            
+            upsert(
+              'events',
+              {
+                program:      state.localconfig.programId,
+                programStage: state.localconfig.programStage,
+                orgUnit:      state.orgUnit,
+                filter:       state.filter
+              },
+              $.preparedEvent,                            
+              {
+                importStrategy: 'CREATE_AND_UPDATE',
+                atomicMode:     'OBJECT',
+                async:          false
+              }
+            ),
+
+           
+            fn(state => {
+              console.log('Upsert result:', state.data);
+              return state;
+            })
+          ];
+        adaptor: '@openfn/language-dhis2@6.1.0'
+        openfn:
+          uuid: 5c26c910-7f0d-4cd7-8a71-22eba3d5db3c
+        configuration: mtuchi@openfn.org|DHIS2 2-40-7
+      - id: flatten-properties
+        name: Flatten properties
+        expression: >
+          alterState((state) => {
+            // Function to process object entries and flatten the structure
+            const processObjectEntries = (result, entries, prefix = '') => {
+              for (let [key, value] of entries) {
+                const newKey =  key; // Create a flat key with dot notation
+                if (value === null || typeof value !== 'object') {
+                  result[newKey] = value; // Store leaf value in result
+                } else {
+                  // Recursively process nested objects or arrays
+                  if (Array.isArray(value)) {
+                    value.forEach((item, index) => {
+                      processObjectEntries(result, Object.entries(item), `${newKey}[${index}]`);
+                    });
+                  } else {
+                    processObjectEntries(result, Object.entries(value), newKey);
+                  }
+                }
+              }
+              return result;
+            };
+
+            // Initialize result as an object, not an array
+            let result = {};
+            
+            // Start processing with the state.data
+            result = processObjectEntries(result, Object.entries(state.data.properties));
+
+            // Update state.data with the flattened result
+            state.properties = result;
+          // Assign state.case_id based on the condition
+            state.case_id = state.properties.source_id !== null && state.properties.source_id !== undefined && state.properties.source_id !== ''
+              ? state.properties.source_id
+              : state.data.case_id;  state.reported_date = state.data.reported_date
+            state.orgUnit = state.properties.external_id,
+            state.data= {};
+            return state;
+          });
+        adaptor: '@openfn/language-common@2.3.0'
+        openfn:
+          uuid: 0f2bd9fa-1f44-4152-8c0c-9fbca0e75f04
+        next:
+          configure-program:
+            disabled: false
+            condition: on_job_success
+            openfn:
+              uuid: d3c3902d-397a-44d4-8acc-225f504dfb47
+      - id: webhook
+        type: webhook
+        enabled: true
+        webhook_reply: before_start
+        openfn:
+          uuid: 7bf6c1bc-f16f-40c0-89a5-184ae6ae742f
+        next:
+          flatten-properties:
+            disabled: false
+            condition: always
+            openfn:
+              uuid: a80a7125-32af-4159-8684-d014c07e6cfd
+    history:
+      - app:abc3b95f887a
+    openfn:
+      uuid: 6cdd641d-6087-414b-8193-d01d71d3240e
+      inserted_at: 2024-11-22T20:45:03Z
+      updated_at: 2025-09-29T12:28:41Z
+      lock_version: 65
+    id: old-cht-dhis2
+    start: webhook
+  - name: CHT-MatchSplit-Mapping
+    steps:
+      - id: mappings
+        name: Mappings
+        expression: >-
+          const convertToBool = (val) => {
+            if (typeof val === 'boolean') return val;
+            if (typeof val === 'string') {
+              val = val.toLowerCase().trim();
+              return val === '1' || val === 'true' || val === 'yes';
+            }
+            return !!val;
+          };
+
+
+          const safeGet = (obj, path, defaultValue = undefined) => {
+            return path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? defaultValue;
+          };
+
+
+          const genderMap = (value) => {
+            if (!value) return undefined;
+            return value.toLowerCase().trim().startsWith('f') ? 'Female' : 'Male';
+          };
+
+          const matchSplit = (chosenAnswers, target, delimiter = " ") => {
+            let chosenAnswersList = chosenAnswers.split(delimiter);
+            return indexOf(chosenAnswersList, target) != -1;
+          };
+
+          const convertToNumeric = (value) => {
+            return value
+          }
+
+          const mapReport = (report) => {
+            const dataElements = [
+              { dataElement: "dummyID", path: "properties.as_dehydration" },
+              { dataElement: "dummyID", path: "properties.p_age" },
+              { dataElement: "dummyID", path: "properties.p_height" },
+              { dataElement: "dummyID", path: "properties.p_temp" },
+              { dataElement: "dummyID", path: "properties.p_weight" },
+              { dataElement: "dummyID", path: "properties.p_heamoglobin" },
+              { dataElement: "dummyID", path: "case_id" },
+              { dataElement: "dummyID", path: "properties.as_danger", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.as_coryza", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.continue_afterlab", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.st_reason_visit", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_anemia", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_anemia_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_conjunctivitis", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_dehydration_severe", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.d_dehydration_some", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_deworming_needed", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_diarrhoea_cholera_like", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_diarrhoea_non_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_diarrhoea_severe_persistent",  transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.d_diarrhoea_watery", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.d_disease_diarrhoeal_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_febrile_refer", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_febrile_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_febrile_severe_no_malaria", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_febrile_severe_persistent", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_severe_malaria_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_disease_severe_no_malaria", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_dysentery", transform: convertToBool},
+              { dataElement: "dummyID", path: "properties.d_dysentery_bacterial", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_ear_acute_w_antibiotics", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_ear_acute_w_discharge", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_ear_no_infection", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_fever", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_jaundice", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_malaria", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_malaria_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_malaria_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_malnutrition_cannot_assess", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_mam", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_sam_w_complications", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_sam_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_sam_wa_complications", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_mastoidity", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_measles", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_measles_w_complications", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_measles_severe_complicated", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_no_dehydration", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_no_malnutrition", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_pneumonia", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_pneumonia_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_throat_likelly_streptococcal", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_throat_viral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_throat_abcess", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_tb_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_typhoid_fever_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_urti", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_uti", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_infection_likely_viral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_vitA_needed", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_wheezing_episode", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_wheezing_recurrent", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_wheezing_resistant", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_pcm_past_12h", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.p_gender", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.p_muac", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_cough", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_cough_past_14d", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_danger_ask", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_danger_look", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_diarrhoea_14d", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_ear_discharge", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_ear_discharge_past_14d", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_ear_pain", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_fever_past_7d", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.ask_glucose_under_3mmol", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_immunizations_received", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_fever_past_24h", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_dysuria", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.st_tt_past", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_rdt_available", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_haemoglob_available", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_T_not_possible", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_urine_test_available", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_abcess_drainage", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_abcess_referral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_bladder", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_abcess_small", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_boils", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_chickenpox", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_eczema", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_cellulitis_erysipelas", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_impetigo_extensive", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_lice_head", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_herpes", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_herpes_referral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_impetigo_simple", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_chickenpox_infected", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_eczema_infected", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_scabies_infected", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_rash_likelly_viral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_mycosis", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_candidiasis_oral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_pitiryasis_versicolor", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_scabies_simple", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_cellulitis_severe", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_shingles", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_skin", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_tinea_capitis", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_tinea_corporis", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_uti_likely", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_ulcer_referral", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_urine_test_available2", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.d_worms", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.str_further_comment", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_diagnosis_further", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.str_diagnosis_further", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_rdt_positive", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_urine_test_positive", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_measles_past_3m_mam", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.st-followup_condition", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.has_child_improved", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.st-followup_reason", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_rutf_planned_followup", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_glucose_below_3_conv", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.is_glucose_test_available_conv", transform: convertToBool },
+              { dataElement: "dummyID", path: "properties.s_cough", transform: { func: matchSplit, args: ["s_cough", " "] }},
+              { dataElement: "dummyID", path: "properties.s_immunizations_received", transform: { func: matchSplit, args: ["s_cough", " "] } },
+              { dataElement: "dummyID", path: "properties.s_danger_look", transform: { func: matchSplit, args: ["s_convulsion", " "] } },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_clouded_cornea", " "] } },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_oedema_bilateral", " "] } },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_oedema_bilateral_1_2plus", " "] } },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_oedema_bilateral_3plus", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_wasting_severe", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_malnutrition_signs", transform: { func: matchSplit, args: ["s_no_weight_gain", " "] } },
+              { dataElement: "dummyID", path: "properties.s_chest_wall_indrawing", transform: { func: matchSplit, args: ["s_not_sucking", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_chest_wall_indrawing", transform: { func: matchSplit, args: ["s_lower_chest_wall_indrawing", " "] } },
+              { dataElement: "dummyID", path: "properties.s_chest_wall_indrawing", transform: { func: matchSplit, args: ["s_stridor", " "] } },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cyanosis", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_weight_loss", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cough_n_appetite_loss", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cough_n_weak", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cold_sweat", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_contact_tb", " "] }  },
+              { dataElement: "dummyID", path: "properties.s_tb2", transform: { func: matchSplit, args: ["s_cough_blood", " "] } }
+            ];
+            return {
+              dataValues: dataElements.map(({ dataElement, path, transform }) => {
+                let value = safeGet(report, path);
+            
+                if (transform) {
+                  if (typeof transform === "function") {
+                    // Simple transform function
+                    value = transform(value);
+                  } else if (typeof transform === "object" && transform.func) {
+                    // Transform function with additional arguments
+                    const args = [value, ...(transform.args || [])];
+                    value = transform.func.apply(null, args);
+                  }
+                }
+            
+                return {
+                  dataElement,
+                  value,
+                };
+              })
+            };
+          };
+
+
+          fn((state) => {
+            const { report } = state.data;
+
+            state.dhis2Mapping = {
+              orgUnit: state.data.orgUnit,
+              occurredAt: state.data.reported_date,
+              program: "wNRmGnc1t11",
+              status: "COMBLETED",
+              ...mapReport(report)
+            };
+
+            console.log(state.dhis2Mapping);
+            return state;
+          });
+        adaptor: '@openfn/language-common@latest'
+        openfn:
+          uuid: 09d87797-33a0-4f52-8237-7f47f8443851
+      - id: webhook
+        type: webhook
+        enabled: false
+        webhook_reply: before_start
+        openfn:
+          uuid: 49215751-ed5c-4292-80ca-998912e72223
+        next:
+          mappings:
+            disabled: false
+            condition: always
+            openfn:
+              uuid: de56cdaa-f0f9-4974-8011-508a876a289b
+    history:
+      - app:cb2e88221d90
+    openfn:
+      uuid: 5f295a1b-8b13-4fe8-a80a-cd539a476995
+      inserted_at: 2025-01-23T16:03:14Z
+      updated_at: 2025-03-26T08:08:34Z
+      lock_version: 5
+    id: cht-matchsplit-mapping
+    start: webhook
+  - name: CHT-DHIS2
+    steps:
+      - id: check-existing-events
+        name: Check Existing Events
+        expression: >-
+          get("events", {
+            orgUnit: state.orgUnit,
+            program: "GaOaL76FraA",
+            filter: `IsrhSrEFAX8:EQ:${state.case_id}`,
+          });
+
+
+          fn(state => {
+            const events = state.data.events || [];
+            if (events.length > 0) {
+              console.log("Existing event found. Will update.");
+              state.existingEvent = events[0];
+            } else {
+              console.log("No existing event found. Proceeding with create.");
+              state.existingEvent = null;
+            }
+            return state;
+          });
+
+
+          // collections.set('run-logs', $.case_id, { 'cht-submission': $.data
+          })
+        adaptor: '@openfn/language-dhis2@6.3.1'
+        openfn:
+          uuid: 77328d2e-4b86-4e4b-8fbd-0f96c5f1fa92
+        configuration: rkenyuri@icrc.org|DHIS2 PLAY dev 2-40
+        next:
+          create-event:
+            disabled: false
+            condition: on_job_success
+            openfn:
+              uuid: c33a8931-5641-4f0a-815b-af04183e14b5
+      - id: create-event
+        name: Create Event
+        expression: >
+          fn(state => {
+            if (state.existingEvent) {
+              // Set the event ID so that DHIS2 updates the event
+              state.preparedEvent.event = state.existingEvent.event;
+            }
+            return state;
+          });
+
+
+          create('events', $.preparedEvent, {
+            params: {
+              importStrategy: 'CREATE_AND_UPDATE',
+              atomicMode: 'OBJECT',
+              async: false  // Prefer boolean false here
+            }
+          });
+
+
+          fn(state => {
+            state.eventId = state.data.bundleReport.typeReportMap.EVENT?.objectReports[0].uid
+            return state
+          })
+
+
+
+          collections.set('run-logs', i => `${i.case_id}-dhis2-response`, {
+          case_id: $.case_id, ...$.data })
+        adaptor: '@openfn/language-dhis2@6.3.1'
+        openfn:
+          uuid: fce084cf-a844-4ff8-8aae-204efac1ce0f
+        configuration: rkenyuri@icrc.org|DHIS2 PLAY dev 2-40
+      - id: map-cht-submission
+        name: Map CHT Submission
+        expression: >
+          collections.set('run-logs', i => `${i.case_id}-cht-submission`,
+          $.data)
+
+
+          fn(state => {
+            console.log("CHT to DHIS2 preparation");
+
+            // Destructure the needed values from state.data
+            const { case_id, orgUnit, properties, reported_date } = state.data;
+
+            // Helper functions
+            function indexOf(collection, target) {
+              for (let i = 0; i < collection.length; i++) {
+                if (collection[i] === target) {
+                  return i;
+                }
+              }
+              return -1;
+            }
+
+            function checkAnswers(chosenAnswers, target, delimiter = " ") {
+              if (chosenAnswers === undefined) { return undefined; }
+              let chosenAnswersList = chosenAnswers.split(delimiter);
+              return indexOf(chosenAnswersList, target) !== -1;
+            }
+
+            function dataElement(dataElement, value, comment) {
+              return { dataElement, value, comment };
+            }
+
+            // Converter function: converts 1/"1" to true, 0/"0" to false
+            const converter = function (x) {
+              if (x === 1 || x === "1") {
+                return true;
+              } else if (x === 0 || x === "0" || x === -1 || x === "-1") {
+                return false;
+              } else {
+                return x;
+              }
+            };
+
+            // This function creates a data element for the case_id
+            function match_id(uid, flag) {
+              return dataElement(uid, case_id);
+            }
+
+            // Updated match function: use the "properties" from state.data
+            function match(uid, flag, conversionFn = converter) {
+              if (properties && flag in properties) {
+                return dataElement(uid, conversionFn(properties[flag]));
+              }
+            }
+
+            const convertToNumeric = value => value;
+
+            // Formats the reported_date (timestamp in ms) to "YYYY-MM-DD"
+            function formatTimestampToDate(timestamp) {
+              const dateObj = new Date(timestamp);
+              const year = dateObj.getFullYear();
+              const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+              const day = String(dateObj.getDate()).padStart(2, '0');
+              return `${year}-${month}-${day}`;
+            }
+
+            // Build the preparedEvent object
+            const preparedEvent = {
+              program: "GaOaL76FraA",
+              orgUnit: orgUnit, // from state.data.orgUnit ("DiszpKrYNg8")
+              occurredAt: formatTimestampToDate(reported_date),
+              status: "COMPLETED",
+              dataValues: [
+                match_id("IsrhSrEFAX8", "case_id"),
+                match("SfLueMvecnc", "age_01day", convertToNumeric),
+                match("wiiDcsQ5pdQ", "age_0_2months", convertToNumeric),
+                match("m5OehFImiIJ", "CHE_B3_DE06"),
+                match("eE4UpNHJQMY", "urgent_referral"),
+                match("Y64yUy6zBEp", "CHE_B23_DE20"),
+                match("Y7RtctxKULG", "CHE_B23_DE19"),
+                match("WjNYqG8zi5V", "CHE_B23_DE03"),
+                match("jmaPh46qxZL", "ALM_B23_DE01"),
+                match("RFMdp6UZuNP", "CHE_B10S1_DE05A"),
+                match("kATEiT6rXkJ", "CHE_B23_DE32"),
+                match("Gcua1eaZ5eC", "CHE_B23_DE17"),
+                match("Dv5Q4FmyvyM", "CHE_B23_DE35"),
+                match("xOTL8X1B2NI", "CHE_B23_DE66"),
+                match("wvIZHqXsAFX", "CHE_B23_DE70"),
+                match("sI5nJKbDXxk", "CHE_B23_DE71"),
+                match("dhLox6Ape1s", "CHE_B23_DE86"),
+                match("PwUUC18At3K", "CHE_B23_DE85"),
+                match("gdr30afwBpC", "CHE_B23_DE88"),
+                match("O7nmBEUP8Se", "CHE_B23_DE91"),
+                match("Km9BtfBd3M7", "CHE_B23_DE92"),
+                match("eqxoTDGxyuQ", "CHE_B23_DE90"),
+                match("jJPlVaVeleR", "CHE_B23_DE81"),
+                match("jpuL5Ovyl2a", "ALM_B23_DE02")
+              ].filter(n => n)
+            };
+
+            console.log('The event', JSON.stringify(preparedEvent, null, 2));
+            return { ...state, preparedEvent, case_id, orgUnit, properties, reported_date };
+          });
+        adaptor: '@openfn/language-common@latest'
+        openfn:
+          uuid: 806f78b4-bccd-4805-8ab5-06e3d31083e5
+        next:
+          check-existing-events:
+            disabled: false
+            condition: on_job_success
+            openfn:
+              uuid: ddb7dcde-bb73-4355-8b27-559bc4f240ee
+      - id: webhook
+        type: webhook
+        enabled: true
+        webhook_reply: before_start
+        openfn:
+          uuid: ba07e26f-c7ca-4bba-80ef-aa19c2044d3d
+        next:
+          map-cht-submission:
+            disabled: false
+            condition: always
+            openfn:
+              uuid: f0390506-831b-4e71-87ce-fa5da234acce
+    history:
+      - app:a65510d52d16
+    openfn:
+      uuid: a3b84c02-58f4-4ebe-bca4-13b42dc536c6
+      inserted_at: 2025-02-18T13:04:44Z
+      updated_at: 2025-03-26T08:54:16Z
+      lock_version: 43
+    id: cht-dhis2
+    start: webhook
+  - name: KOBO-Mpesa
+    steps:
+      - id: fetch-submissions
+        name: Fetch Submissions
+        expression: >-
+          // Check out the Job Writing Guide for help getting started:
+
+          // https://docs.openfn.org/documentation/jobs/job-writing-guide
+
+
+          getSubmissions('aXecHjmbATuF6iGFmvBLBX', { query: { _submission_time:{
+          $gte: "2022-06-12T21:54:20" } } });
+        adaptor: '@openfn/language-kobotoolbox@latest'
+        openfn:
+          uuid: fbe27271-0b24-4a00-83b5-632666f297bd
+        next:
+          mpesa-request:
+            disabled: false
+            condition: on_job_success
+            openfn:
+              uuid: 3fb5b99d-0c78-42bc-815e-3fcf35d7bc80
+      - id: mpesa-request
+        name: Mpesa request
+        expression: |-
+          get('https://catfact.ninja/fact', {
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+        adaptor: '@openfn/language-http@latest'
+        openfn:
+          uuid: 2ee4b011-1896-4cf5-87fe-cf3b9133e4c4
+      - id: webhook
+        type: webhook
+        enabled: false
+        webhook_reply: before_start
+        openfn:
+          uuid: 3b335c3a-cfb8-40d5-801b-856a297b000e
+        next:
+          fetch-submissions:
+            disabled: false
+            condition: always
+            openfn:
+              uuid: 8723a8c4-d620-4538-8757-da4f89563520
+    history:
+      - app:6f7eb78110b3
+    openfn:
+      uuid: 94d86f5b-12a1-4cd2-8948-9fe65da6b596
+      inserted_at: 2025-03-20T13:33:03Z
+      updated_at: 2025-03-26T08:10:59Z
+      lock_version: 3
+    id: kobo-mpesa
+    start: webhook

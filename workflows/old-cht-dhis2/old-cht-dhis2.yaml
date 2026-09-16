@@ -1,0 +1,42 @@
+id: old-cht-dhis2
+name: Old-CHT-DHIS2
+start: webhook
+steps:
+  - id: check-if-event-exist
+    name: Check if event exist
+    adaptor: '@openfn/language-dhis2@8.0.3'
+    configuration: rkenyuri@icrc.org|DHIS2 PLAY dev 2-40
+    expression: ./check-if-event-exist.js
+    next:
+      create-or-update-event-program:
+        disabled: false
+        condition: on_job_success
+  - id: configure-program
+    name: Configure Program
+    adaptor: '@openfn/language-common@latest'
+    expression: ./configure-program.js
+    next:
+      check-if-event-exist:
+        disabled: false
+        condition: on_job_success
+  - id: create-or-update-event-program
+    name: Create or update event program
+    adaptor: '@openfn/language-dhis2@6.1.0'
+    configuration: mtuchi@openfn.org|DHIS2 2-40-7
+    expression: ./create-or-update-event-program.js
+  - id: flatten-properties
+    name: Flatten properties
+    adaptor: '@openfn/language-common@2.3.0'
+    expression: ./flatten-properties.js
+    next:
+      configure-program:
+        disabled: false
+        condition: on_job_success
+  - id: webhook
+    type: webhook
+    enabled: true
+    webhook_reply: before_start
+    next:
+      flatten-properties:
+        disabled: false
+        condition: always
